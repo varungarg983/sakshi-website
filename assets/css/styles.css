@@ -1,14 +1,14 @@
 :root {
-  --bg: #eef3f7;
+  --bg: #f7f2df;
   --paper: #ffffff;
-  --paper-strong: #f3f8fc;
+  --paper-strong: #fbf6e9;
   --ink: #14212b;
-  --muted: #53626d;
-  --line: #d5dee6;
-  --accent: #0f4c81;
-  --accent-dark: #0b3559;
-  --accent-soft: rgba(35, 78, 112, 0.08);
-  --accent-pale: #dcebfa;
+  --muted: #5f5a4b;
+  --line: #e1d3a8;
+  --accent: #c79a1b;
+  --accent-dark: #8a6908;
+  --accent-soft: rgba(199, 154, 27, 0.10);
+  --accent-pale: #f6e7a7;
   --success: #2f7d57;
   --warn: #b07a18;
   --alert: #b44444;
@@ -29,9 +29,9 @@ body {
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
   background:
-    radial-gradient(circle at top right, rgba(15, 76, 129, 0.10), transparent 22%),
-    radial-gradient(circle at top left, rgba(15, 76, 129, 0.05), transparent 18%),
-    linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
+    radial-gradient(circle at top right, rgba(199, 154, 27, 0.16), transparent 22%),
+    radial-gradient(circle at top left, rgba(199, 154, 27, 0.08), transparent 18%),
+    linear-gradient(180deg, #fcf8ea 0%, var(--bg) 100%);
   line-height: 1.5;
 }
 
@@ -175,7 +175,7 @@ h3 {
 .hero-copy {
   padding: 40px;
   background:
-    linear-gradient(135deg, rgba(15, 76, 129, 0.04), rgba(15, 76, 129, 0) 55%),
+    linear-gradient(135deg, rgba(199, 154, 27, 0.08), rgba(199, 154, 27, 0) 55%),
     var(--paper);
 }
 
@@ -368,31 +368,31 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(15, 76, 129, 0.05), rgba(15, 76, 129, 0)),
+    linear-gradient(180deg, rgba(199, 154, 27, 0.08), rgba(199, 154, 27, 0)),
     #fff;
   box-shadow: var(--shadow);
 }
 
 .panel-dark {
-  background: linear-gradient(135deg, #123a5d, #0d2740);
-  border-color: #123a5d;
-  color: #fff;
+  background: linear-gradient(135deg, #c79a1b, #a87f12);
+  border-color: #a87f12;
+  color: #2b2311;
 }
 
 .panel-dark h2,
 .panel-dark p,
 .panel-dark a {
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(43, 35, 17, 0.92);
 }
 
 .panel-dark .eyebrow {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.35);
+  color: #5f4500;
 }
 
 .panel-dark .button-secondary {
-  border-color: rgba(255, 255, 255, 0.55);
-  color: #fff;
+  border-color: rgba(43, 35, 17, 0.35);
+  color: #2b2311;
 }
 
 .assessment-form .question-group {
