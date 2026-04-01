@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sakshi Aggarwal | Business Sales Guidance</title>
+  <style>
+    :root {
+      --bg: #f5efe4;
+      --paper: #fffaf2;
+      --ink: #1f2933;
+      --muted: #5f6c76;
+      --accent: #b45c3b;
+      --accent-dark: #8e462b;
+      --line: #dccfb8;
+      --card: #f8f1e5;
+      --shadow: 0 20px 50px rgba(58, 45, 30, 0.12);
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(180, 92, 59, 0.12), transparent 28%),
+        linear-gradient(180deg, #f8f2e8 0%, var(--bg) 100%);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .wrap {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      padding: 24px 0;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: rgba(255, 250, 242, 0.8);
+      border: 1px solid rgba(220, 207, 184, 0.7);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .hero {
+      padding: 36px 0 28px;
+    }
+
+    .hero-panel {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-card,
+    .section-card,
+    .resource-card,
+    .contact-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 52px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 18px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(180, 92, 59, 0.1);
+      color: var(--accent-dark);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    h1 {
+      font-size: clamp(2.7rem, 5vw, 5rem);
+      margin-bottom: 18px;
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 3vw, 3rem);
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 1.04rem;
+    }
+
+    .lede {
+      max-width: 58ch;
+      font-size: 1.12rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 28px 0 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      font-size: 0.98rem;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .button.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--accent-dark);
+    }
+
+    .hero-card {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(180deg, rgba(180, 92, 59, 0.08), rgba(180, 92, 59, 0) 45%),
+        var(--paper);
+    }
+
+    .mini-card {
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .mini-card:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .mini-kicker {
+      color: var(--accent-dark);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .trust-note {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+    }
+
+    section {
+      padding: 22px 0;
+    }
+
+    .section-card {
+      padding: 40px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .bullet-list {
+      padding: 0;
+      margin: 18px 0 0;
+      list-style: none;
+    }
+
+    .bullet-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 10px;
+      color: var(--muted);
+    }
+
+    .bullet-list li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      position: absolute;
+      left: 0;
+      top: 10px;
+    }
+
+    .resources {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .resource-card {
+      padding: 28px;
+    }
+
+    .resource-type {
+      color: var(--accent-dark);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .contact-card {
+      padding: 40px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+    }
+
+    .contact-panel {
+      padding: 22px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+
+    .contact-panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer {
+      padding: 18px 0 42px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero-panel,
+      .split,
+      .resources,
+      .contact-card {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy,
+      .section-card,
+      .resource-card,
+      .contact-card {
+        padding: 28px;
+      }
+
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="nav">
+        <div class="brand">
+          Sakshi Aggarwal
+          <span>Working with Clyth McLeod</span>
+        </div>
+        <div class="nav-links">
+          <a href="#about">About</a>
+          <a href="#buyers-sellers">Who I Help</a>
+          <a href="#resources">Resources</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap hero-panel">
+        <div class="hero-copy">
+          <div class="eyebrow">Business Sales Guidance</div>
+          <h1>Helping New Zealand business owners move forward with more clarity.</h1>
+          <p class="lede">I work with buyers and sellers across New Zealand through Clyth McLeod, offering practical guidance, honest communication, and a straightforward approach to business sales.</p>
+          <div class="actions">
+            <a class="button primary" href="#contact">Book a Confidential Chat</a>
+            <a class="button secondary" href="#resources">Get the Sale Readiness Checklist</a>
+          </div>
+          <p class="trust-note">Clear advice. Practical support. No unnecessary jargon.</p>
+        </div>
+
+        <aside class="hero-card">
+          <div>
+            <div class="mini-card">
+              <div class="mini-kicker">For Sellers</div>
+              <h3>Thinking about selling?</h3>
+              <p>Start with a practical conversation about readiness, timing, presentation, and likely buyer concerns.</p>
+            </div>
+            <div class="mini-card">
+              <div class="mini-kicker">For Buyers</div>
+              <h3>Looking at opportunities?</h3>
+              <p>Take a clearer view of fit, risk, and what matters when assessing a business for sale.</p>
+            </div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-kicker">Current Role</div>
+            <p>Sakshi Aggarwal works with Clyth McLeod. Any business brokerage services are provided through that agency and in line with current New Zealand requirements.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="about">
+      <div class="wrap section-card">
+        <h2>Business sales are important decisions. They should not feel harder than they need to.</h2>
+        <p>Whether you are thinking about selling your business or looking for the right business to buy, the process can feel unclear at first. My role is to help make that process easier to understand and easier to navigate.</p>
+        <p>I believe people value straight answers, realistic expectations, and guidance they can actually use. The aim is not to overwhelm you. The aim is to help you make informed decisions with more confidence.</p>
+      </div>
+    </section>
+
+    <section id="buyers-sellers">
+      <div class="wrap split">
+        <div class="section-card">
+          <h2>For business owners thinking about selling</h2>
+          <p>If you are considering a sale, one of the first questions is usually where to begin. Readiness, timing, presentation, and the quality of your information all affect how a sale process unfolds.</p>
+          <ul class="bullet-list">
+            <li>Understand how ready your business may be for market.</li>
+            <li>Spot issues that may concern serious buyers.</li>
+            <li>Take practical next steps before going to market.</li>
+          </ul>
+          <div class="actions">
+            <a class="button primary" href="#contact">Start with a Confidential Chat</a>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h2>For buyers looking at business opportunities</h2>
+          <p>Buying a business is more than responding to a listing. It is about understanding the opportunity, the risks, and whether the business is the right fit for your goals, background, and appetite.</p>
+          <ul class="bullet-list">
+            <li>Take a more practical view of what matters in a business.</li>
+            <li>Understand the story behind the numbers and operations.</li>
+            <li>Approach opportunities with better clarity and judgement.</li>
+          </ul>
+          <div class="actions">
+            <a class="button secondary" href="#contact">Talk About Buying a Business</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="resources">
+      <div class="wrap">
+        <div class="section-card" style="margin-bottom: 18px;">
+          <h2>Helpful resources for buyers and sellers</h2>
+          <p>Useful, practical guidance builds trust faster than hard selling. These examples show the kind of educational content this profile can publish.</p>
+        </div>
+        <div class="resources">
+          <article class="resource-card">
+            <div class="resource-type">Guide</div>
+            <h3>How to prepare your business for sale in New Zealand</h3>
+            <p>What to get in order before going to market, from financials and operations through to timing and presentation.</p>
+            <a class="button secondary" href="#contact">Read the Article</a>
+          </article>
+
+          <article class="resource-card">
+            <div class="resource-type">Article</div>
+            <h3>What buyers look for when assessing a business</h3>
+            <p>The practical questions buyers often ask when looking at business opportunities, and what sellers should be ready to explain.</p>
+            <a class="button secondary" href="#contact">Read the Article</a>
+          </article>
+
+          <article class="resource-card">
+            <div class="resource-type">Checklist</div>
+            <h3>The 15-Minute Business Sale Readiness Check</h3>
+            <p>A short checklist to help business owners understand how ready they may be for sale and what may need attention first.</p>
+            <a class="button primary" href="#contact">Get the Checklist</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="wrap contact-card">
+        <div>
+          <h2>Start with a confidential conversation</h2>
+          <p>If you are thinking about selling, looking to buy, or simply trying to understand your options, a straightforward first conversation can help clarify what to do next.</p>
+          <p>This mockup keeps the call to action simple and trust-based. On a real site, this section could link to an enquiry form, Calendly, company contact page, or approved lead process.</p>
+          <div class="actions">
+            <a class="button primary" href="mailto:hello@example.com">Email Enquiry</a>
+            <a class="button secondary" href="tel:+64000000000">Phone Call</a>
+          </div>
+        </div>
+
+        <div class="contact-panel">
+          <div class="mini-kicker">Important</div>
+          <p>Keep your current affiliation visible while you are still working under Clyth McLeod.</p>
+          <p>A live version should use your approved contact details, compliant wording, and the enquiry process your current arrangement allows.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      Sakshi Aggarwal works with Clyth McLeod. This mockup is a personal-profile concept and should be adapted to fit your current contractual and compliance position before use.
+    </div>
+  </footer>
+</body>
+</html>

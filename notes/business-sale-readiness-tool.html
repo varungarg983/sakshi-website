@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Sale Readiness Check | Sakshi Aggarwal</title>
+  <style>
+    :root {
+      --bg: #f4ecdf;
+      --panel: #fffaf2;
+      --panel-alt: #f9f1e4;
+      --ink: #22303a;
+      --muted: #5e6b74;
+      --line: #dccdb7;
+      --accent: #b75f3d;
+      --accent-dark: #8f472c;
+      --good: #2f7d57;
+      --mid: #b17a18;
+      --low: #b34141;
+      --shadow: 0 22px 60px rgba(64, 46, 28, 0.12);
+      --max: 1100px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(183, 95, 61, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8f2e7 0%, var(--bg) 100%);
+      line-height: 1.55;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .wrap {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 34px 0 24px;
+    }
+
+    .hero-card,
+    .intro-card,
+    .section-card,
+    .result-card,
+    .contact-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 44px;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(183, 95, 61, 0.1);
+      color: var(--accent-dark);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.12;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: clamp(2.6rem, 5vw, 4.8rem);
+      margin-bottom: 16px;
+      max-width: 10ch;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .hero-lede {
+      max-width: 56ch;
+      font-size: 1.12rem;
+    }
+
+    .meta-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+    }
+
+    .meta-box p:last-child,
+    .intro-card p:last-child,
+    .section-card p:last-child,
+    .result-copy p:last-child,
+    .contact-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .intro {
+      padding: 0 0 18px;
+    }
+
+    .intro-card {
+      padding: 28px 32px;
+    }
+
+    .score-guide {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .score-chip {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .score-chip strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .assessment {
+      padding: 0 0 24px;
+    }
+
+    .section-card {
+      padding: 28px;
+      margin-bottom: 18px;
+    }
+
+    .question {
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .question:first-of-type {
+      border-top: 0;
+      padding-top: 8px;
+    }
+
+    .question-text {
+      margin-bottom: 12px;
+      color: var(--ink);
+      font-size: 1.04rem;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .options label {
+      cursor: pointer;
+    }
+
+    .options input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .options input:checked + .pill {
+      background: rgba(183, 95, 61, 0.12);
+      border-color: var(--accent);
+      color: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button,
+    .button-link {
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      min-height: 48px;
+      padding: 0 18px;
+      font: inherit;
+      font-size: 0.98rem;
+      cursor: pointer;
+    }
+
+    button.primary,
+    .button-link.primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    button.secondary,
+    .button-link.secondary {
+      background: transparent;
+      color: var(--accent-dark);
+    }
+
+    .result {
+      padding: 0 0 24px;
+    }
+
+    .result-card {
+      display: none;
+      padding: 32px;
+    }
+
+    .result-card.visible {
+      display: block;
+    }
+
+    .result-top {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .result-badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+
+    .result-badge.good {
+      background: var(--good);
+    }
+
+    .result-badge.mid {
+      background: var(--mid);
+    }
+
+    .result-badge.low {
+      background: var(--low);
+    }
+
+    .score-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .score-number {
+      font-size: 3rem;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .breakdown {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .breakdown div {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .next-steps {
+      margin-top: 18px;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .next-steps li {
+      margin-bottom: 8px;
+    }
+
+    .contact {
+      padding: 0 0 36px;
+    }
+
+    .contact-card {
+      padding: 32px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .small-note {
+      margin-top: 14px;
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      padding: 0 0 38px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero-card,
+      .result-top,
+      .contact-grid,
+      .score-guide,
+      .breakdown {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-card,
+      .intro-card,
+      .section-card,
+      .result-card,
+      .contact-card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-card">
+        <div>
+          <div class="eyebrow">Interactive Assessment</div>
+          <h1>Business Sale Readiness Check</h1>
+          <p class="hero-lede">Answer a short set of practical questions and get an instant view of how ready your business may be for sale, where the likely weak spots are, and what to work on next.</p>
+          <p>This tool is designed for New Zealand business owners thinking about selling in the next 6 to 24 months.</p>
+        </div>
+        <aside class="meta-box">
+          <h3>Before you start</h3>
+          <p>This is a practical readiness check, not a formal valuation. It is intended to help owners think more clearly about preparation, buyer expectations, and timing.</p>
+          <p><strong>Current affiliation:</strong> Sakshi Aggarwal works with Clyth McLeod. Any live version of this tool should use your approved enquiry and follow-up process.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="intro">
+      <div class="wrap intro-card">
+        <h2>How scoring works</h2>
+        <p>For each question, choose the answer that best reflects your current situation. The score updates only when you submit the full assessment.</p>
+        <div class="score-guide">
+          <div class="score-chip">
+            <strong>Yes = 2 points</strong>
+            Your business appears to be in good shape on that item.
+          </div>
+          <div class="score-chip">
+            <strong>Partly = 1 point</strong>
+            There is something in place, but it may need tightening up.
+          </div>
+          <div class="score-chip">
+            <strong>No = 0 points</strong>
+            This is likely a weakness or missing area to address.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="assessment">
+      <div class="wrap">
+        <form id="assessment-form">
+          <div class="section-card">
+            <h2>1. Owner readiness</h2>
+            <p>Clarity on timing and goals makes the whole sale process easier to manage.</p>
+
+            <div class="question">
+              <div class="question-text">Do you have a clear reason for selling and a rough timeframe?</div>
+              <div class="options">
+                <label><input type="radio" name="q1" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q1" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q1" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Are decision-makers aligned on the plan, including any partners or family members involved?</div>
+              <div class="options">
+                <label><input type="radio" name="q2" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q2" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q2" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h2>2. Financial readiness</h2>
+            <p>Buyers want clean numbers they can understand and trust.</p>
+
+            <div class="question">
+              <div class="question-text">Are your financial statements up to date and reasonably easy to explain?</div>
+              <div class="options">
+                <label><input type="radio" name="q3" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q3" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q3" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Can you clearly separate business expenses from personal or one-off items?</div>
+              <div class="options">
+                <label><input type="radio" name="q4" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q4" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q4" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Are GST, PAYE, and other key obligations current?</div>
+              <div class="options">
+                <label><input type="radio" name="q5" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q5" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q5" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h2>3. Operational readiness</h2>
+            <p>Businesses that depend less on the owner are usually easier to sell.</p>
+
+            <div class="question">
+              <div class="question-text">Can the business run day to day without relying on you for every key decision?</div>
+              <div class="options">
+                <label><input type="radio" name="q6" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q6" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q6" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Are your core processes documented or easy to hand over?</div>
+              <div class="options">
+                <label><input type="radio" name="q7" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q7" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q7" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h2>4. Revenue and customer quality</h2>
+            <p>Buyers will look closely at stability, concentration risk, and how repeatable the income is.</p>
+
+            <div class="question">
+              <div class="question-text">Is your revenue spread across more than one or two major customers?</div>
+              <div class="options">
+                <label><input type="radio" name="q8" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q8" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q8" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Can you clearly explain recent sales trends and where customers come from?</div>
+              <div class="options">
+                <label><input type="radio" name="q9" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q9" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q9" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <h2>5. Team, legal, and timing</h2>
+            <p>This last section covers continuity, compliance, and whether your timing is right.</p>
+
+            <div class="question">
+              <div class="question-text">Would the business keep operating well if a key staff member left?</div>
+              <div class="options">
+                <label><input type="radio" name="q10" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q10" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q10" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Are key contracts, leases, licences, or permits current and available where relevant?</div>
+              <div class="options">
+                <label><input type="radio" name="q11" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q11" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q11" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="question">
+              <div class="question-text">Would going to market now be sensible, or have you largely resolved the obvious issues first?</div>
+              <div class="options">
+                <label><input type="radio" name="q12" value="2"><span class="pill">Yes</span></label>
+                <label><input type="radio" name="q12" value="1"><span class="pill">Partly</span></label>
+                <label><input type="radio" name="q12" value="0"><span class="pill">No</span></label>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="primary">Calculate My Readiness</button>
+              <button type="button" class="secondary" id="reset-button">Reset Answers</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="result">
+      <div class="wrap">
+        <div id="result-card" class="result-card" aria-live="polite">
+          <div class="result-top">
+            <div class="score-box">
+              <div id="result-badge" class="result-badge">Result</div>
+              <div class="score-number"><span id="score-value">0</span><span style="font-size: 1.3rem;"> / 24</span></div>
+              <p id="score-summary">Complete the assessment to see your score.</p>
+              <div class="breakdown">
+                <div>
+                  <strong id="yes-count">0</strong>
+                  <p>Yes</p>
+                </div>
+                <div>
+                  <strong id="partly-count">0</strong>
+                  <p>Partly</p>
+                </div>
+                <div>
+                  <strong id="no-count">0</strong>
+                  <p>No</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-copy">
+              <h2 id="result-title">Your result</h2>
+              <p id="result-body">Complete the questions above to see your result.</p>
+              <ul id="next-steps" class="next-steps"></ul>
+              <div class="actions">
+                <a class="button-link primary" href="#contact">Talk Through My Result</a>
+                <button type="button" class="secondary" id="start-again-button">Start Again</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="wrap contact-card">
+        <h2>Want help interpreting your result?</h2>
+        <p>This is where a live version could invite the owner to enquire after seeing their score. For now, this form is a front-end mockup only and does not send data anywhere.</p>
+        <form class="contact-grid">
+          <div class="field">
+            <label for="first-name">First name</label>
+            <input id="first-name" name="first_name" type="text" placeholder="Your first name">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com">
+          </div>
+          <div class="field">
+            <label for="timeframe">Selling timeframe</label>
+            <select id="timeframe" name="timeframe">
+              <option value="">Select one</option>
+              <option>Within 6 months</option>
+              <option>6 to 12 months</option>
+              <option>12 to 24 months</option>
+              <option>Just exploring</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="business-type">Business type</label>
+            <input id="business-type" name="business_type" type="text" placeholder="Hospitality, retail, service, etc.">
+          </div>
+          <div class="field full">
+            <label for="message">What would you like help with?</label>
+            <textarea id="message" name="message" placeholder="For example: readiness, timing, likely buyer concerns, or what to improve before going to market"></textarea>
+          </div>
+          <div class="field full">
+            <button type="button" class="primary">Enquire About My Result</button>
+          </div>
+        </form>
+        <p class="small-note">Suggested disclaimer: This tool is general information only. It is not legal, tax, or financial advice, and it is not a formal valuation.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      This standalone page is suitable for a free static deployment. If you later want email capture, CRM syncing, or stored submissions, the next step would be connecting the form to a backend or form service.
+    </div>
+  </footer>
+
+  <script>
+    const form = document.getElementById('assessment-form');
+    const resultCard = document.getElementById('result-card');
+    const resultBadge = document.getElementById('result-badge');
+    const scoreValue = document.getElementById('score-value');
+    const scoreSummary = document.getElementById('score-summary');
+    const resultTitle = document.getElementById('result-title');
+    const resultBody = document.getElementById('result-body');
+    const nextSteps = document.getElementById('next-steps');
+    const yesCount = document.getElementById('yes-count');
+    const partlyCount = document.getElementById('partly-count');
+    const noCount = document.getElementById('no-count');
+    const resetButton = document.getElementById('reset-button');
+    const startAgainButton = document.getElementById('start-again-button');
+
+    const results = {
+      strong: {
+        badge: 'Strong Position',
+        badgeClass: 'good',
+        title: 'You appear to be in a strong position to start planning a sale.',
+        summary: 'Your answers suggest your business is relatively well prepared in the main areas buyers usually care about.',
+        body: 'That does not guarantee an easy sale, but it does suggest you may be well placed to discuss timing, presentation, likely buyer fit, and how to approach market confidently.',
+        steps: [
+          'Review how the business would be presented to buyers.',
+          'Identify likely value drivers and any points a buyer may question.',
+          'Have a confidential conversation about timing and sale strategy.'
+        ]
+      },
+      moderate: {
+        badge: 'Needs Tightening',
+        badgeClass: 'mid',
+        title: 'You may be closer than you think, but some areas likely need attention first.',
+        summary: 'Your answers suggest there is substance to work with, but buyer confidence may be affected by a few weaker areas.',
+        body: 'This often means the business could still be saleable, but preparation around financials, operations, staff dependence, or documentation may improve the eventual process and outcome.',
+        steps: [
+          'Work out which two or three issues would most improve buyer confidence.',
+          'Tighten the information you would need to share during a sale process.',
+          'Discuss whether it makes sense to prepare first or go to market sooner.'
+        ]
+      },
+      early: {
+        badge: 'Preparation Needed',
+        badgeClass: 'low',
+        title: 'Your business may need more preparation before going to market.',
+        summary: 'Your answers suggest a buyer would probably see a number of unanswered questions or areas of risk.',
+        body: 'That is not a dead end. It usually means the best next step is to get clear on what to improve first so you can strengthen the business and approach a future sale more confidently.',
+        steps: [
+          'Identify the most urgent gaps in financial clarity, owner dependence, and documentation.',
+          'Decide which improvements could realistically be made in the next 6 to 12 months.',
+          'Use a confidential conversation to prioritise what matters most before a sale.'
+        ]
+      }
+    };
+
+    function resetResultClasses() {
+      resultBadge.classList.remove('good', 'mid', 'low');
+    }
+
+    function renderNextSteps(items) {
+      nextSteps.innerHTML = '';
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        nextSteps.appendChild(li);
+      });
+    }
+
+    function getSelectedValue(name) {
+      const field = form.querySelector(`input[name="${name}"]:checked`);
+      return field ? Number(field.value) : null;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      let total = 0;
+      let yes = 0;
+      let partly = 0;
+      let no = 0;
+
+      for (let index = 1; index <= 12; index += 1) {
+        const value = getSelectedValue(`q${index}`);
+        if (value === null) {
+          window.alert('Please answer every question before calculating your result.');
+          return;
+        }
+
+        total += value;
+        if (value === 2) yes += 1;
+        if (value === 1) partly += 1;
+        if (value === 0) no += 1;
+      }
+
+      let outcome;
+      if (total >= 18) {
+        outcome = results.strong;
+      } else if (total >= 10) {
+        outcome = results.moderate;
+      } else {
+        outcome = results.early;
+      }
+
+      resetResultClasses();
+      resultBadge.classList.add(outcome.badgeClass);
+      resultBadge.textContent = outcome.badge;
+      scoreValue.textContent = total;
+      scoreSummary.textContent = outcome.summary;
+      resultTitle.textContent = outcome.title;
+      resultBody.textContent = outcome.body;
+      yesCount.textContent = yes;
+      partlyCount.textContent = partly;
+      noCount.textContent = no;
+      renderNextSteps(outcome.steps);
+
+      resultCard.classList.add('visible');
+      resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    function clearAssessment() {
+      form.reset();
+      resultCard.classList.remove('visible');
+      resetResultClasses();
+      nextSteps.innerHTML = '';
+    }
+
+    resetButton.addEventListener('click', clearAssessment);
+    startAgainButton.addEventListener('click', clearAssessment);
+  </script>
+</body>
+</html>
