@@ -596,22 +596,18 @@
               </div>
             </div>
 
-            <!-- Q2: Business type -->
+            <!-- Q2: Business name -->
             <div class="q-card fade-up" style="animation-delay: 0.1s">
               <div class="q-num">Question 02</div>
-              <div class="q-text">What type of business was involved in your transaction?</div>
-              <div class="options" data-q="q2" data-type="single">
-                <button type="button" class="opt" data-value="a retail business">Retail</button>
-                <button type="button" class="opt" data-value="a restaurant or food business">Restaurant / Food</button>
-                <button type="button" class="opt" data-value="a service-based business">Service Business</button>
-                <button type="button" class="opt" data-value="a franchise">Franchise</button>
-                <button type="button" class="opt" data-value="a manufacturing business">Manufacturing</button>
-                <button type="button" class="opt" data-value="an e-commerce business">E-Commerce</button>
-                <button type="button" class="opt" data-value="a healthcare business">Healthcare</button>
-                <button type="button" class="opt" data-value="a technology business">Technology</button>
-                <button type="button" class="opt" data-value="a construction or trades business">Construction / Trades</button>
-                <button type="button" class="opt" data-value="a professional services firm">Professional Services</button>
-              </div>
+              <div class="q-text">What was the name of the business? <span style="font-weight:400; color: var(--subtle); font-size: 0.88rem;">(optional — only share if you're comfortable)</span></div>
+              <input
+                type="text"
+                class="q-textarea"
+                id="q2input"
+                placeholder="e.g. Auckland Café Co. — or leave blank if you'd prefer not to say"
+                style="min-height: unset; height: 46px; resize: none;"
+                oninput="updateProgress()"
+              />
             </div>
 
             <!-- Q3: Buyer or Seller -->
@@ -783,10 +779,11 @@
     function countAnswered() {
       let n = 0;
       if (document.querySelector('input[name="q1"]:checked')) n++;
-      for (let i = 2; i <= 4; i++) {
-        const a = answers['q' + i];
-        if (a && (Array.isArray(a) ? a.length > 0 : a)) n++;
-      }
+      if (document.getElementById('q2input').value.trim()) n++;
+      const q3 = answers['q3'];
+      if (q3) n++;
+      const q4 = answers['q4'];
+      if (q4 && (Array.isArray(q4) ? q4.length > 0 : q4)) n++;
       if (document.getElementById('q5').value.trim()) n++;
       return n;
     }
@@ -886,7 +883,7 @@
     // ── Generate review (calls Netlify Function) ──────────
     async function generateReview() {
       const rating = document.querySelector('input[name="q1"]:checked')?.value || '5';
-      const businessType = answers.q2 || 'a business';
+      const businessName = document.getElementById('q2input').value.trim();
       const role = answers.q3 || 'client';
       const highlights = answers.q4 || [];
       const extra = document.getElementById('q5').value.trim();
@@ -897,7 +894,7 @@
         const response = await fetch('/.netlify/functions/generate-review', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rating, businessType, role, highlights, extra }),
+          body: JSON.stringify({ rating, businessName, role, highlights, extra }),
         });
 
         const data = await response.json();

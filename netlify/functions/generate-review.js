@@ -16,7 +16,7 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
 
-  const { rating, businessType, role, highlights, extra, quickWords } = body;
+  const { rating, businessName, role, highlights, extra, quickWords } = body;
 
   let prompt;
 
@@ -40,11 +40,15 @@ Write a Google review for Sakshi based on these words. Follow these rules exactl
         ? highlights.join(', ')
         : 'professionalism and communication';
 
+    const businessRef = businessName
+      ? `a business called "${businessName}"`
+      : 'a business (name not disclosed)';
+
     prompt = `You are helping a satisfied client write a genuine Google review for Sakshi Aggarwal, a Business Broker at Clyth McLeod in Auckland, New Zealand.
 
 Client's answers:
 - Star rating: ${rating || 5} out of 5
-- Type of business: ${businessType || 'a business'}
+- Business involved: ${businessRef}
 - Their role in the transaction: ${role || 'client'}
 - What they appreciated most: ${highlightText}
 - Any extra comments: ${extra ? extra.trim() : 'None provided'}
@@ -53,12 +57,13 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
 1. Write in first person as the client
 2. Keep it 3–4 sentences — not too short, not too long
 3. Sound like a real person wrote it — warm, natural, and specific
-4. Reference the type of business and their role (buying or selling)
-5. Mention 1–2 of the things they appreciated, worked naturally into the text
-6. If extra comments were provided, incorporate the sentiment into the review
-7. End with a genuine recommendation
-8. Do NOT use generic filler phrases like "I highly recommend" as an opener — vary the ending
-9. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
+4. If a business name was provided, mention it naturally in the review
+5. If no business name was provided, refer to it generically (e.g. "my business", "the business")
+6. Reference the client's role (buying or selling)
+7. Mention 1–2 of the things they appreciated, worked naturally into the text
+8. If extra comments were provided, incorporate the sentiment
+9. End with a genuine recommendation — vary the phrasing, don't always use "I highly recommend"
+10. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
   }
 
   try {
