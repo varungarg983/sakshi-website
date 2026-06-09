@@ -52,7 +52,7 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
+        model: 'meta/llama-3.1-8b-instruct',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 300,
@@ -61,14 +61,16 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
 
     if (!response.ok) {
       const err = await response.text();
-      console.error('NVIDIA API error:', err);
+      console.error('NVIDIA API error:', response.status, err);
       return { statusCode: 502, body: JSON.stringify({ error: 'AI service error. Please try again.' }) };
     }
 
     const data = await response.json();
+    console.log('API response:', JSON.stringify(data));
     const review = data.choices?.[0]?.message?.content?.trim();
 
     if (!review) {
+      console.error('Empty review. finish_reason:', data.choices?.[0]?.finish_reason);
       return { statusCode: 502, body: JSON.stringify({ error: 'No review generated. Please try again.' }) };
     }
 
