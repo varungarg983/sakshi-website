@@ -274,12 +274,34 @@
     }
 
     #generatedReview {
+      width: 100%;
       font-size: 0.98rem;
       line-height: 1.85;
       color: var(--ink);
       position: relative;
       z-index: 1;
-      white-space: pre-wrap;
+      border: 1.5px dashed var(--gold-light);
+      border-radius: var(--radius);
+      background: transparent;
+      padding: 10px 12px;
+      font-family: 'Inter', sans-serif;
+      resize: vertical;
+      outline: none;
+      min-height: 120px;
+      transition: border-color 150ms var(--ease-out);
+      box-sizing: border-box;
+    }
+
+    #generatedReview:focus {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+    }
+
+    .edit-hint {
+      font-size: 0.78rem;
+      color: var(--subtle);
+      margin-top: 8px;
+      margin-bottom: 0;
     }
 
     .review-actions {
@@ -542,7 +564,8 @@
             </div>
 
             <div class="review-box">
-              <div id="generatedReview"></div>
+              <textarea id="generatedReview" rows="6" spellcheck="true"></textarea>
+              <p class="edit-hint">✏️ Feel free to edit before posting — it's your review.</p>
             </div>
 
             <div class="review-actions">
@@ -678,7 +701,7 @@
     function showResult(review) {
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('resultState').style.display = 'block';
-      document.getElementById('generatedReview').textContent = review;
+      document.getElementById('generatedReview').value = review;
       generatedText = review;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -715,11 +738,12 @@
 
     // ── Copy to clipboard ─────────────────────────────────
     function copyReview() {
-      if (!generatedText) return;
-      navigator.clipboard.writeText(generatedText).catch(() => {
+      const textToCopy = document.getElementById('generatedReview')?.value || generatedText;
+      if (!textToCopy) return;
+      navigator.clipboard.writeText(textToCopy).catch(() => {
         // Fallback for older browsers
         const ta = document.createElement('textarea');
-        ta.value = generatedText;
+        ta.value = textToCopy;
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
         document.body.appendChild(ta);
