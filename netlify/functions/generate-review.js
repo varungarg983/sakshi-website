@@ -52,7 +52,7 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'meta/llama-3.3-70b-instruct',
+        model: 'nvidia/llama-3.3-nemotron-super-49b-v1.5',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 300,
