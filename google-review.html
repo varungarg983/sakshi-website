@@ -406,6 +406,86 @@
 
     .fade-up { animation: fadeUp 0.4s var(--ease-out) both; }
 
+    /* ── Tabs ─────────────────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      border-bottom: 2px solid var(--line);
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--subtle);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+    }
+
+    .tab-btn:hover { color: var(--navy); }
+
+    .tab-btn.active {
+      color: var(--navy);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ── Quick tab ────────────────────────────────────── */
+    #quickForm { display: none; }
+
+    .quick-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .quick-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .quick-hint {
+      font-size: 0.85rem;
+      color: var(--subtle);
+      margin-bottom: 16px;
+    }
+
+    .word-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .word-chip {
+      padding: 6px 14px;
+      border-radius: 99px;
+      border: 1px solid var(--line);
+      background: var(--bg-subtle);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 130ms var(--ease-out);
+      font-weight: 500;
+    }
+
+    .word-chip:hover, .word-chip.selected {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
     @media (max-width: 600px) {
       .q-card { padding: 20px 18px; }
       .review-box { padding: 24px 20px; }
@@ -449,6 +529,48 @@
     <section class="review-main">
       <div class="container">
         <div class="form-wrap">
+
+          <!-- Tabs -->
+          <div class="tab-row" id="tabRow">
+            <button class="tab-btn active" onclick="switchTab('guided')" id="tabGuided">📋 &nbsp;Guided (5 questions)</button>
+            <button class="tab-btn" onclick="switchTab('quick')" id="tabQuick">⚡ &nbsp;Quick (just type words)</button>
+          </div>
+
+          <!-- Quick form -->
+          <div id="quickForm">
+            <div class="quick-card fade-up">
+              <p class="quick-label">Just type a few words or phrases about your experience</p>
+              <p class="quick-hint">e.g. "professional, fast, stress-free, sold my café" — we'll turn them into a full review.</p>
+
+              <div class="word-chips" id="wordChips">
+                <button type="button" class="word-chip" data-word="professional">Professional</button>
+                <button type="button" class="word-chip" data-word="great communication">Great communication</button>
+                <button type="button" class="word-chip" data-word="stress-free">Stress-free</button>
+                <button type="button" class="word-chip" data-word="highly recommended">Highly recommended</button>
+                <button type="button" class="word-chip" data-word="smooth process">Smooth process</button>
+                <button type="button" class="word-chip" data-word="knowledgeable">Knowledgeable</button>
+                <button type="button" class="word-chip" data-word="honest">Honest</button>
+                <button type="button" class="word-chip" data-word="patient">Patient</button>
+                <button type="button" class="word-chip" data-word="fast">Fast</button>
+                <button type="button" class="word-chip" data-word="responsive">Responsive</button>
+              </div>
+
+              <textarea
+                class="q-textarea"
+                id="quickWords"
+                placeholder="Type or add your own words here, or tap the chips above to add them..."
+                rows="3"
+                style="margin-bottom: 8px;"
+              ></textarea>
+
+              <div class="submit-wrap" style="margin-top: 16px;">
+                <button type="button" class="button button-primary" onclick="generateQuickReview()" style="min-width: 220px;">
+                  Generate My Review
+                </button>
+                <p class="submit-note">We'll turn your words into a full, natural-sounding review.</p>
+              </div>
+            </div>
+          </div>
 
           <!-- Progress bar -->
           <div class="progress-bar-wrap" id="progressWrap">
@@ -675,10 +797,63 @@
       document.getElementById('progressLabel').textContent = n + ' / 5';
     }
 
+    // ── Tab switching ─────────────────────────────────────
+    let activeTab = 'guided';
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.getElementById('tabGuided').classList.toggle('active', tab === 'guided');
+      document.getElementById('tabQuick').classList.toggle('active', tab === 'quick');
+      document.getElementById('quickForm').style.display = tab === 'quick' ? 'block' : 'none';
+      document.getElementById('questionForm').style.display = tab === 'guided' ? '' : 'none';
+      document.getElementById('progressWrap').style.display = tab === 'guided' ? '' : 'none';
+    }
+
+    // ── Word chips (quick tab) ────────────────────────────
+    document.querySelectorAll('.word-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+        const ta = document.getElementById('quickWords');
+        const word = chip.dataset.word;
+        if (chip.classList.contains('selected')) {
+          ta.value = ta.value ? ta.value.trimEnd() + ', ' + word : word;
+        } else {
+          ta.value = ta.value.split(',').map(w => w.trim()).filter(w => w !== word).join(', ');
+        }
+      });
+    });
+
+    // ── Quick review generation ───────────────────────────
+    async function generateQuickReview() {
+      const words = document.getElementById('quickWords').value.trim();
+      if (!words) {
+        document.getElementById('quickWords').focus();
+        return;
+      }
+      showLoading();
+      try {
+        const response = await fetch('/.netlify/functions/generate-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quickWords: words }),
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) {
+          showError(data.error || 'Something went wrong. Please try again.');
+          return;
+        }
+        showResult(data.review);
+      } catch (err) {
+        showError('Could not connect. Please check your connection and try again.');
+      }
+    }
+
     // ── Show / hide states ────────────────────────────────
     function showForm() {
-      document.getElementById('questionForm').style.display = '';
-      document.getElementById('progressWrap').style.display = '';
+      document.getElementById('quickForm').style.display = activeTab === 'quick' ? 'block' : 'none';
+      document.getElementById('questionForm').style.display = activeTab === 'guided' ? '' : 'none';
+      document.getElementById('progressWrap').style.display = activeTab === 'guided' ? '' : 'none';
+      document.getElementById('tabRow').style.display = '';
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('errorState').style.display = 'none';
       document.getElementById('resultState').style.display = 'none';
@@ -686,7 +861,9 @@
 
     function showLoading() {
       document.getElementById('questionForm').style.display = 'none';
+      document.getElementById('quickForm').style.display = 'none';
       document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('tabRow').style.display = 'none';
       document.getElementById('loadingState').style.display = 'block';
       document.getElementById('errorState').style.display = 'none';
       document.getElementById('resultState').style.display = 'none';

@@ -16,15 +16,31 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) };
   }
 
-  const { rating, businessType, role, highlights, extra } = body;
+  const { rating, businessType, role, highlights, extra, quickWords } = body;
 
-  // Build a clear, structured prompt
-  const highlightText =
-    Array.isArray(highlights) && highlights.length > 0
-      ? highlights.join(', ')
-      : 'professionalism and communication';
+  let prompt;
 
-  const prompt = `You are helping a satisfied client write a genuine Google review for Sakshi Aggarwal, a Business Broker at Clyth McLeod in Auckland, New Zealand.
+  if (quickWords) {
+    // Quick mode — build from free-form words
+    prompt = `You are helping a client write a genuine Google review for Sakshi Aggarwal, a Business Broker at Clyth McLeod in Auckland, New Zealand.
+
+The client has given you these words and phrases to describe their experience:
+"${quickWords.trim()}"
+
+Write a Google review for Sakshi based on these words. Follow these rules exactly:
+1. Write in first person as the client
+2. Keep it 3–4 sentences — warm, natural, and specific
+3. Weave in the client's words naturally — don't just list them
+4. End with a genuine recommendation
+5. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
+  } else {
+    // Guided mode — build from structured answers
+    const highlightText =
+      Array.isArray(highlights) && highlights.length > 0
+        ? highlights.join(', ')
+        : 'professionalism and communication';
+
+    prompt = `You are helping a satisfied client write a genuine Google review for Sakshi Aggarwal, a Business Broker at Clyth McLeod in Auckland, New Zealand.
 
 Client's answers:
 - Star rating: ${rating || 5} out of 5
@@ -43,6 +59,7 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
 7. End with a genuine recommendation
 8. Do NOT use generic filler phrases like "I highly recommend" as an opener — vary the ending
 9. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
+  }
 
   try {
     const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
