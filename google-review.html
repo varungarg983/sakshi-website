@@ -386,6 +386,25 @@
 
     .btn-restart:hover { color: var(--muted); }
 
+    .btn-regenerate {
+      display: block;
+      margin: 8px auto 0;
+      background: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--navy);
+      cursor: pointer;
+      transition: all 140ms var(--ease-out);
+    }
+    .btn-regenerate:hover {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+      color: var(--navy);
+    }
+
     /* Stars badge */
     .stars-badge {
       display: inline-block;
@@ -640,12 +659,12 @@
 
             <!-- Q5: Extra comments / anything that could have been better -->
             <div class="q-card fade-up" style="animation-delay: 0.25s">
-              <div class="q-num">Question 05 &nbsp;<span style="font-weight:400;opacity:0.6;">Optional</span></div>
-              <div class="q-text">Anything else you'd like to mention? (Including anything that could have been even better.)</div>
+              <div class="q-num">Question 05 &nbsp;<span style="font-weight:400;color:var(--alert);font-size:0.8rem;">Required</span></div>
+              <div class="q-text">In your own words, briefly describe your experience. <span style="font-weight:400;color:var(--subtle);font-size:0.88rem;">This is what makes your review feel personal and genuine.</span></div>
               <textarea
                 class="q-textarea"
                 id="q5"
-                placeholder="e.g. Sakshi went above and beyond to make sure the deal closed on time. The only thing I'd suggest is more frequent updates mid-process..."
+                placeholder="e.g. Sakshi went above and beyond to help us close on time. She was always available when we needed her and kept us calm throughout..."
                 rows="3"
               ></textarea>
             </div>
@@ -711,6 +730,8 @@
               <div class="instructions-box">
                 <p><strong>What to do next:</strong> Google Reviews opens in a new tab. Your review is already copied — just paste it (tap &amp; hold → Paste on mobile, or Ctrl+V on desktop) and click <strong>Post</strong>.</p>
               </div>
+
+              <button class="btn-regenerate" onclick="regenerateReview()">↻ Try a different version</button>
 
               <button class="btn-restart" onclick="location.reload()">← Start over</button>
 
@@ -888,6 +909,17 @@
       const highlights = answers.q4 || [];
       const extra = document.getElementById('q5').value.trim();
 
+      // Q5 is required — personalises the review
+      if (!extra) {
+        const q5El = document.getElementById('q5');
+        q5El.focus();
+        q5El.style.borderColor = 'var(--alert)';
+        q5El.setAttribute('placeholder', 'Please add a few words in your own words — this is required to personalise your review.');
+        q5El.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      document.getElementById('q5').style.borderColor = '';
+
       showLoading();
 
       try {
@@ -911,6 +943,15 @@
     }
 
     // ── Copy to clipboard ─────────────────────────────────
+    // ── Regenerate ───────────────────────────────────────────────────────────
+    function regenerateReview() {
+      if (activeTab === 'quick') {
+        generateQuickReview();
+      } else {
+        generateReview();
+      }
+    }
+
     function copyReview() {
       const textToCopy = document.getElementById('generatedReview')?.value || generatedText;
       if (!textToCopy) return;

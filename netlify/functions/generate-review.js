@@ -18,6 +18,24 @@ exports.handler = async function (event) {
 
   const { rating, businessName, role, highlights, extra, quickWords } = body;
 
+  // ── Random style variation ────────────────────────────────────────────────
+  // Picked server-side so every call gets a different flavour
+  const styles = [
+    { tone: 'casual and conversational', opening: 'Start with a personal anecdote or how you first felt about the process.' },
+    { tone: 'professional and precise', opening: 'Start by stating the outcome or result you achieved.' },
+    { tone: 'warm and heartfelt', opening: 'Start by expressing how the experience made you feel.' },
+    { tone: 'brief and punchy', opening: 'Start with the single most impressive thing Sakshi did.' },
+    { tone: 'story-like and narrative', opening: 'Start by briefly setting the scene — what situation you were in before contacting Sakshi.' },
+  ];
+  const style = styles[Math.floor(Math.random() * styles.length)];
+
+  // ── Forbidden openers (to prevent samey first lines) ─────────────────────
+  const forbiddenOpeners = [
+    'I had an amazing', 'I had a great', 'Working with Sakshi was', 'Sakshi is an amazing',
+    'Sakshi is a great', 'I highly recommend', 'I recently worked with Sakshi',
+    'I recently had the pleasure', 'I had the pleasure',
+  ];
+
   let prompt;
 
   if (quickWords) {
@@ -31,8 +49,11 @@ Write a Google review for Sakshi based on these words. Follow these rules exactl
 1. Write in first person as the client
 2. Keep it 3–4 sentences — warm, natural, and specific
 3. Weave in the client's words naturally — don't just list them
-4. End with a genuine recommendation
-5. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
+4. End with a genuine recommendation — use fresh phrasing, NOT "I highly recommend"
+5. Tone: ${style.tone}. ${style.opening}
+6. Do NOT start with any of these phrases: ${forbiddenOpeners.join('; ')}
+7. Vary your sentence lengths — mix short punchy sentences with longer ones
+8. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
   } else {
     // Guided mode — build from structured answers
     const highlightText =
@@ -62,8 +83,11 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
 6. Reference the client's role (buying or selling)
 7. Mention 1–2 of the things they appreciated, worked naturally into the text
 8. If extra comments were provided, incorporate the sentiment
-9. End with a genuine recommendation — vary the phrasing, don't always use "I highly recommend"
-10. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
+9. End with a genuine recommendation — use fresh phrasing, do NOT use "I highly recommend"
+10. Tone: ${style.tone}. ${style.opening}
+11. Do NOT start with any of these phrases: ${forbiddenOpeners.join('; ')}
+12. Vary your sentence lengths — mix short punchy sentences with longer ones
+13. Output ONLY the review text, with no intro, no explanation, no quotation marks`;
   }
 
   try {
@@ -76,7 +100,7 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
       body: JSON.stringify({
         model: 'meta/llama-3.1-8b-instruct',
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
+        temperature: 0.9,
         max_tokens: 300,
       }),
     });
