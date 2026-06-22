@@ -386,6 +386,44 @@
 
     .btn-restart:hover { color: var(--muted); }
 
+    .review-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .review-nav-btn {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      width: 38px;
+      height: 38px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: var(--navy);
+      transition: all 130ms var(--ease-out);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .review-nav-btn:hover:not(:disabled) {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+    }
+    .review-nav-btn:disabled {
+      opacity: 0.28;
+      cursor: default;
+    }
+    .review-nav-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--navy);
+      min-width: 44px;
+      text-align: center;
+      letter-spacing: 0.03em;
+    }
+
     .btn-regenerate {
       display: block;
       margin: 8px auto 0;
@@ -681,8 +719,8 @@
           <!-- Loading state -->
           <div id="loadingState">
             <div class="spinner"></div>
-            <h3>Writing your review…</h3>
-            <p>Crafting something genuine from your answers</p>
+            <h3>Writing 5 versions…</h3>
+            <p>Generating a few different takes — pick your favourite.</p>
           </div>
 
           <!-- Error state -->
@@ -695,9 +733,15 @@
           <div id="resultState" class="fade-up">
 
             <div class="result-header">
-              <p class="eyebrow">Your review is ready</p>
-              <h2>Here's your Google Review</h2>
-              <p>Read it over, then tap the button below to post it.</p>
+              <p class="eyebrow">Your reviews are ready</p>
+              <h2>Choose your favourite</h2>
+              <p>Browse all 5 versions, pick the one you like, then paste and post.</p>
+            </div>
+
+            <div class="review-nav" id="reviewNav">
+              <button class="review-nav-btn" id="prevReviewBtn" onclick="stepReview(-1)" aria-label="Previous review">&#8592;</button>
+              <span class="review-nav-label" id="reviewNavLabel">1 of 5</span>
+              <button class="review-nav-btn" id="nextReviewBtn" onclick="stepReview(1)" aria-label="Next review">&#8594;</button>
             </div>
 
             <div class="review-box">
@@ -706,6 +750,8 @@
             </div>
 
             <div class="review-actions">
+
+              <button class="btn-regenerate" onclick="regenerateReview()">↻ Generate 5 new versions</button>
 
               <button class="btn-copy-review" onclick="copyReview()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -730,8 +776,6 @@
               <div class="instructions-box">
                 <p><strong>What to do next:</strong> Google Reviews opens in a new tab. Your review is already copied — just paste it (tap &amp; hold → Paste on mobile, or Ctrl+V on desktop) and click <strong>Post</strong>.</p>
               </div>
-
-              <button class="btn-regenerate" onclick="regenerateReview()">↻ Try a different version</button>
 
               <button class="btn-restart" onclick="location.reload()">← Start over</button>
 
@@ -769,6 +813,8 @@
   <script>
     const answers = {};
     let generatedText = '';
+    let reviews = [];
+    let currentReviewIndex = 0;
 
     // ── Wire up star rating ──────────────────────────────
     document.querySelectorAll('.stars input').forEach(input => {
@@ -850,17 +896,20 @@
       }
       showLoading();
       try {
-        const response = await fetch('/.netlify/functions/generate-review', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quickWords: words }),
-        });
-        const data = await response.json();
-        if (!response.ok || data.error) {
-          showError(data.error || 'Something went wrong. Please try again.');
+        const promises = Array.from({ length: 5 }, () =>
+          fetch('/.netlify/functions/generate-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ quickWords: words }),
+          }).then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        const reviewTexts = results.map(d => d.review).filter(Boolean);
+        if (!reviewTexts.length) {
+          showError('Something went wrong. Please try again.');
           return;
         }
-        showResult(data.review);
+        showResult(reviewTexts);
       } catch (err) {
         showError('Could not connect. Please check your connection and try again.');
       }
@@ -893,12 +942,30 @@
       document.getElementById('errorMsg').textContent = msg || 'Something went wrong. Please try again.';
     }
 
-    function showResult(review) {
+    function showResult(reviewArray) {
+      reviews = Array.isArray(reviewArray) ? reviewArray : [reviewArray];
+      currentReviewIndex = 0;
+      renderReview();
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('resultState').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderReview() {
+      const review = reviews[currentReviewIndex];
       document.getElementById('generatedReview').value = review;
       generatedText = review;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('reviewNavLabel').textContent = (currentReviewIndex + 1) + ' of ' + reviews.length;
+      document.getElementById('prevReviewBtn').disabled = currentReviewIndex === 0;
+      document.getElementById('nextReviewBtn').disabled = currentReviewIndex === reviews.length - 1;
+    }
+
+    function stepReview(dir) {
+      const newIndex = currentReviewIndex + dir;
+      if (newIndex >= 0 && newIndex < reviews.length) {
+        currentReviewIndex = newIndex;
+        renderReview();
+      }
     }
 
     // ── Generate review (calls Netlify Function) ──────────
@@ -923,20 +990,23 @@
       showLoading();
 
       try {
-        const response = await fetch('/.netlify/functions/generate-review', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rating, businessName, role, highlights, extra }),
-        });
+        const payload = { rating, businessName, role, highlights, extra };
+        const promises = Array.from({ length: 5 }, () =>
+          fetch('/.netlify/functions/generate-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }).then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        const reviewTexts = results.map(d => d.review).filter(Boolean);
 
-        const data = await response.json();
-
-        if (!response.ok || data.error) {
-          showError(data.error || 'Something went wrong. Please try again.');
+        if (!reviewTexts.length) {
+          showError('Something went wrong. Please try again.');
           return;
         }
 
-        showResult(data.review);
+        showResult(reviewTexts);
       } catch (err) {
         showError('Could not connect. Please check your connection and try again.');
       }
