@@ -4,6 +4,14 @@ A running log of all changes made to the website.
 
 ---
 
+## 2026-11-17
+
+### Review Page — Fix: reviews not generating
+- NVIDIA retired `meta/llama-3.1-8b-instruct` (API now returns 410 Gone), so every review request failed
+- Switched the Netlify function to `google/gemma-3-12b-it`
+
+---
+
 ## 2026-06-23
 
 ### Review Page — Multi-version generation & navigation

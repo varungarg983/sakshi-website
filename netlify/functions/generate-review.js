@@ -98,7 +98,7 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'meta/llama-3.1-8b-instruct',
+        model: 'google/gemma-3-12b-it',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.9,
         max_tokens: 300,
