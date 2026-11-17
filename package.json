@@ -1,0 +1,8 @@
+{
+  "name": "sakshi-website",
+  "private": true,
+  "description": "Static site with a Netlify function for the Google review generator",
+  "dependencies": {
+    "@netlify/blobs": "11.1.7"
+  }
+}

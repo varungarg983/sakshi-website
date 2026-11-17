@@ -6,6 +6,22 @@ A running log of all changes made to the website.
 
 ## 2026-11-17
 
+### Review Page — Redesign as a standalone, one-question-at-a-time page
+- Removed the site menu and footer links so the page is only for leaving a review
+- Questions now appear one at a time with large tap targets (built for phones); stars and buying/selling move on automatically
+- Short thank-you line from Sakshi at the top; "Quick" mode is now a "Type a few words instead" shortcut
+- Result screen shows the review like a Google review card, with swipe or arrows between the 5 versions
+- Page set to `noindex` so it doesn't appear in Google search results
+
+### Review Page — Keep reviews varied over time
+- One request now returns 5 versions, each given a different mix of tone, length, structure, opening, wording and ending (thousands of combinations instead of 5 tones)
+- About 35 overused AI phrases are banned; repeated words are penalised
+- Reviews clients copy are saved (Netlify Blobs) and new reviews are steered away from their openings and phrases; any review still too similar is rewritten once
+- New optional question that changes each visit (e.g. "Was there a moment you knew it would work out?") for more personal detail
+- AI is told to use only facts the client gave, write in NZ English with normal punctuation, and treat every review as about a business (not property)
+- Automatic retry when NVIDIA is busy, within a time limit
+- Logic moved to `netlify/review-core.mjs`; function is now `generate-review.mjs`; added `package.json` for `@netlify/blobs`
+
 ### Review Page — Fix: reviews not generating
 - NVIDIA retired `meta/llama-3.1-8b-instruct` (API now returns 410 Gone), so every review request failed
 - Switched the Netlify function to `nvidia/nemotron-3.5-lightning-30b-a3b` with thinking turned off (~1s per review)
