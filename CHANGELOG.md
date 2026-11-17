@@ -6,6 +6,12 @@ A running log of all changes made to the website.
 
 ## 2026-11-17
 
+### Review Page — Rough notes and voice input
+- Writing questions now tell clients that rough notes and spelling mistakes are fine
+- "Speak" microphone button on each writing box (browser speech-to-text, New Zealand English); hidden in browsers that don't support it, with a friendly message if the microphone is blocked
+- Client notes get a quick spelling, grammar and misheard-word fix before reviews are written, so mistakes are never copied into a review
+- Reviews that just repeat the client's notes, are very short, or come out as broken fragments are rewritten; place names the client used (e.g. Hamilton) keep their capital letters
+
 ### Review Page — Redesign as a standalone, one-question-at-a-time page
 - Removed the site menu and footer links so the page is only for leaving a review
 - Questions now appear one at a time with large tap targets (built for phones); stars and buying/selling move on automatically

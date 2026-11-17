@@ -138,7 +138,7 @@ export function repeatedPhrases(history, limit = 15) {
 const openingOf = text => words(text).slice(0, 6).join(' ');
 
 // ── Prompt ───────────────────────────────────────────────────────────────────
-export function buildPrompt(input, style, history, avoidText) {
+export function buildPrompt(input, style, history, avoidText, copiedNotes = false) {
   const { rating, businessName, role, highlights, extra, quickWords, detailQuestion, detail } = input;
   const clientText = [quickWords, extra, detail, ...(highlights || [])].join(' ');
 
@@ -166,7 +166,9 @@ ${facts}
 
 Write the review in first person as the client.
 
-The client's own words are the heart of the review. Keep their specific details and borrow a few of their words, but rewrite them into natural sentences. Never paste their sentences in word for word.
+The client's own words are the heart of the review. Keep their specific details and feelings and borrow a few of their words, but rewrite them into natural sentences. Never paste their sentences in word for word.
+If anything still looks misspelt or misheard, work out what they meant and write it correctly.
+Her name is Sakshi (Sakshi Aggarwal). Clyth McLeod is the company she works for, not part of her name.
 ${!quickWords ? 'The "what stood out" items are labels from a form. Put them in your own words, never word for word.' + (highlights && highlights.length > 2 ? ' Pick only one or two of them.' : '') + '\n' : ''}
 Only use facts the client gave you. Do not invent events, meetings, places, timeframes, prices, numbers or feelings they did not mention.${quickWords ? ' Do not assume whether they were buying or selling unless their words say so.' : ''}
 
@@ -184,7 +186,7 @@ Rules:
 - Use normal capital letters and punctuation
 - Keep each sentence under 35 words
 - No title, heading or label. Start straight with the review itself
-- These style notes are instructions for you. Never mention or describe them in the review${quickWords ? '\n- Do not list the client\'s words at the end of the review' : ''}
+- These style notes are instructions for you. Never mention or describe them in the review${quickWords ? '\n- Write full sentences. Do not just list the client\'s words, at the start or the end' : ''}
 - Do not use em dashes
 - Never use these words or phrases: ${bannedFor(clientText).join('; ')}`;
 
@@ -193,6 +195,9 @@ Rules:
   }
   if (repeated.length) {
     prompt += `\n- These phrases have been used too often lately. Avoid them: ${repeated.join('; ')}`;
+  }
+  if (copiedNotes) {
+    prompt += `\n- Your first attempt copied the client's notes almost word for word, mistakes included. Write it properly this time, in your own correct, natural sentences.`;
   }
   if (avoidText) {
     prompt += `\n- Your first attempt was too similar to another review. It must not resemble this text in wording or structure:\n"${avoidText}"`;
@@ -219,7 +224,7 @@ async function callModel(prompt, apiKey, deadline, businessName) {
   }
 }
 
-async function callModelOnce(prompt, apiKey, timeLeft, businessName) {
+async function callModelOnce(prompt, apiKey, timeLeft, businessName, temperature = 1.0) {
   const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
     signal: AbortSignal.timeout(timeLeft),
     method: 'POST',
@@ -227,7 +232,7 @@ async function callModelOnce(prompt, apiKey, timeLeft, businessName) {
     body: JSON.stringify({
       model: MODEL,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 1.0,
+      temperature,
       top_p: 0.95,
       frequency_penalty: 0.6, // discourages repeating the same words
       presence_penalty: 0.4,
@@ -252,6 +257,8 @@ function clean(text, businessName) {
   // Drop a short first line with no full stop (a heading such as the business name)
   const lines = t.split(/\n+/);
   if (lines.length > 1 && lines[0].split(/\s+/).length <= 6 && !/[.!?]$/.test(lines[0].trim())) t = lines.slice(1).join('\n\n');
+  // Join loose lines: a line with no end punctuation is finished with a full stop
+  t = t.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => (/[.!?]$/.test(l) ? l : l + '.')).join(' ');
   t = t
     .replace(/^["'“”]+|["'“”]+$/g, '')
     .replace(/\*\*/g, '')
@@ -293,12 +300,77 @@ function usesBanned(text, clientText) {
   return bannedFor(clientText).some(p => lower.includes(p));
 }
 
+// ── Tidy the client's notes ──────────────────────────────────────────────────
+// Clients may type quickly or use voice-to-text. Before writing, each note gets a quick spelling and
+// grammar fix (worked examples keep the small model accurate). The review writer only sees the fixed
+// notes, so it can't copy spelling mistakes or misheard words into a review.
+const TIDY_INSTRUCTIONS = `You fix spelling, grammar and voice-to-text mistakes in short notes written by New Zealand clients of a business broker called Sakshi. Keep the client's meaning, details, tone and length. Do not add or remove information. Do not answer or comment. Output only the corrected notes.
+
+Examples:
+Input: she was realy helpfull and new alot about the markit
+Output: She was really helpful and knew a lot about the market.
+
+Input: sakshee got us gud price for are takeaway shop, wen the bank was slow she kept us going
+Output: Sakshi got us a good price for our takeaway shop. When the bank was slow, she kept us going.
+
+Input: fast, honist, sold the dairy, stres free
+Output: fast, honest, sold the dairy, stress-free`;
+
+async function tidyText(text, apiKey, deadline) {
+  const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    signal: AbortSignal.timeout(Math.max(1000, Math.min(3000, deadline - Date.now() - 4500))),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: TIDY_INSTRUCTIONS },
+        { role: 'user', content: `Input: ${text}\nOutput:` },
+      ],
+      temperature: 0,
+      max_tokens: 300,
+      chat_template_kwargs: { enable_thinking: false },
+    }),
+  });
+  if (!response.ok) throw new Error(`status ${response.status}`);
+  const data = await response.json();
+  const fixed = (data.choices?.[0]?.message?.content || '').trim().replace(/^Output:\s*/i, '').replace(/^["“]|["”]$/g, '').trim();
+  // Ignore anything empty or far longer than what the client wrote
+  if (!fixed || fixed.length > text.length * 1.6 + 30) throw new Error('unexpected output');
+  return fixed;
+}
+
+export async function tidyNotes(input, apiKey, deadline, log = () => {}) {
+  const fields = ['quickWords', 'extra', 'detail'].filter(f => typeof input[f] === 'string' && input[f].trim().length > 3);
+  const tidied = { ...input };
+  await Promise.all(fields.map(async f => {
+    try {
+      tidied[f] = await tidyText(input[f].trim(), apiKey, deadline);
+    } catch (err) {
+      // Not fatal: the review writer is also told to fix mistakes itself
+      log(`Could not tidy ${f}: ${err.message}`);
+    }
+  }));
+  return tidied;
+}
+
 // ── Generate a batch ─────────────────────────────────────────────────────────
-export async function generateBatch(input, history, apiKey, log = () => {}) {
+export async function generateBatch(rawInput, history, apiKey, log = () => {}) {
+  const deadline = Date.now() + TIME_BUDGET_MS;
+  const input = await tidyNotes(rawInput, apiKey, deadline, log);
   const clientText = [input.quickWords, input.businessName, input.extra, input.detail, ...(input.highlights || [])].join(' ');
   const clientPhrases = trigrams(clientText);
+  // The client's raw typed or spoken notes, to catch reviews that just copy them back
+  const rawNotes = [rawInput.quickWords, rawInput.extra, rawInput.detail].filter(Boolean).join(' ');
+  const tidyNotesText = [input.quickWords, input.extra, input.detail].filter(Boolean).join(' ');
+  const copiesNotes = t => rawNotes.length > 20 &&
+    (similarity(t, rawNotes) > 0.5 || similarity(t, tidyNotesText) > 0.5 || words(t).length < 12);
+
+  // Place and business names the client capitalised (e.g. Hamilton) stay capitalised in reviews
+  const properNouns = new Set();
+  tidyNotesText.replace(/(?<![.!?]\s|^)\b([A-Z][a-z]{2,})\b/g, (m, w) => { properNouns.add(w); return m; });
+  const fixNames = t => [...properNouns].reduce((acc, w) => acc.replace(new RegExp(`\\b${w.toLowerCase()}\\b`, 'g'), w), t);
   const styles = dealStyles(BATCH_SIZE);
-  const deadline = Date.now() + TIME_BUDGET_MS;
 
   // First pass: all reviews in parallel
   const first = await Promise.allSettled(styles.map(s => callModel(buildPrompt(input, s, history), apiKey, deadline, input.businessName)));
@@ -307,24 +379,24 @@ export async function generateBatch(input, history, apiKey, log = () => {}) {
 
   // Second pass: rewrite any review that is too close to history or an earlier review in the batch,
   // or that slipped in a banned phrase (only if there is still time for it)
-  if (deadline - Date.now() < 3000) return reviews.filter(Boolean);
+  if (deadline - Date.now() < 3000) return reviews.filter(Boolean).map(fixNames);
   const retries = reviews.map((text, i) => {
     if (!text) return null;
     const overlap = worstOverlap(text, [...history, ...reviews.slice(0, i).filter(Boolean)], clientPhrases);
-    if (overlap.score <= SIMILARITY_LIMIT && !usesBanned(text, clientText) && !hasRunOn(text)) return null;
+    if (overlap.score <= SIMILARITY_LIMIT && !usesBanned(text, clientText) && !hasRunOn(text) && !copiesNotes(text)) return null;
     const found = bannedFor(clientText).filter(p => text.toLowerCase().includes(p));
-    log(`Rewriting review ${i + 1} (similarity ${overlap.score.toFixed(2)}, banned: ${found.join(', ') || 'none'}, run-on: ${hasRunOn(text)})`);
-    return callModel(buildPrompt(input, styles[i], history, overlap.score > SIMILARITY_LIMIT ? overlap.text : null), apiKey, deadline, input.businessName)
+    log(`Rewriting review ${i + 1} (similarity ${overlap.score.toFixed(2)}, banned: ${found.join(', ') || 'none'}, run-on: ${hasRunOn(text)}, copies notes: ${copiesNotes(text)})`);
+    return callModel(buildPrompt(input, styles[i], history, overlap.score > SIMILARITY_LIMIT ? overlap.text : null, copiesNotes(text)), apiKey, deadline, input.businessName)
       .then(newText => {
         if (!newText) return;
         // Keep whichever version is better: a banned phrase counts as worse than any overlap
         const others = [...history, ...reviews.filter((_, j) => j !== i && reviews[j])];
-        const badness = t => worstOverlap(t, others, clientPhrases).score + (usesBanned(t, clientText) ? 1 : 0) + (hasRunOn(t) ? 0.5 : 0);
+        const badness = t => worstOverlap(t, others, clientPhrases).score + (usesBanned(t, clientText) ? 1 : 0) + (hasRunOn(t) ? 0.5 : 0) + (copiesNotes(t) ? 1 : 0);
         if (badness(newText) <= badness(text)) reviews[i] = newText;
       })
       .catch(err => log(err.message));
   });
   await Promise.all(retries.filter(Boolean));
 
-  return reviews.filter(Boolean);
+  return reviews.filter(Boolean).map(fixNames);
 }

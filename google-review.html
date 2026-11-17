@@ -273,6 +273,53 @@
 
     .field + .field { margin-top: 20px; }
 
+    /* Voice input */
+    .voice-wrap { position: relative; }
+    .voice-wrap.has-mic textarea { padding-bottom: 52px; resize: none; }
+
+    .mic-btn {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 14px 0 10px;
+      border-radius: 999px;
+      border: 1.5px solid var(--line);
+      background: var(--paper);
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 500;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .mic-btn:hover { border-color: var(--navy-mid); }
+    .mic-btn svg { width: 18px; height: 18px; flex: none; }
+
+    .mic-btn.listening {
+      background: var(--alert);
+      border-color: var(--alert);
+      color: #fff;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(180, 68, 68, 0.35); }
+      50% { box-shadow: 0 0 0 6px rgba(180, 68, 68, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mic-btn.listening { animation: none; }
+    }
+
+    .voice-note {
+      font-size: 13px;
+      color: var(--alert);
+      margin: 6px 0 0;
+    }
+
     /* Buttons */
     .actions {
       display: flex;
@@ -518,9 +565,11 @@
         <div class="step" data-step="4">
           <p class="step-count">Question 4 of 5</p>
           <h2 tabindex="-1">In your own words, how did it go?</h2>
-          <p class="hint">A sentence or two is plenty. This is what makes your review sound like you.</p>
+          <p class="hint">Write it however it comes out. Rough notes and spelling mistakes are fine, we'll tidy it up. Or tap the mic and just say it.</p>
           <label for="ownWords" class="sr-only">Describe your experience</label>
-          <textarea id="ownWords" rows="4" placeholder="Sakshi found a buyer who wanted to keep our staff on, and kept us calm through due diligence"></textarea>
+          <div class="voice-wrap">
+            <textarea id="ownWords" rows="4" data-voice placeholder="sold my shop, she found buyer fast, kept me calm when finance was slow"></textarea>
+          </div>
           <p class="error-text" id="ownWordsError" role="alert"></p>
           <div class="actions">
             <button type="button" class="btn-back" onclick="goTo(3)">← Back</button>
@@ -535,7 +584,9 @@
           <p class="hint">Skip these if you like.</p>
           <div class="field">
             <label class="field-label" for="detailAnswer" id="detailQuestion">What were you worried about before you started?</label>
-            <textarea id="detailAnswer" rows="2" style="min-height: 72px" placeholder="A sentence is plenty"></textarea>
+            <div class="voice-wrap">
+              <textarea id="detailAnswer" rows="2" style="min-height: 72px" data-voice placeholder="Type or tap the mic, any way you like"></textarea>
+            </div>
           </div>
           <div class="field">
             <label class="field-label" for="businessName">Business name <span>(only if you're happy to share it)</span></label>
@@ -552,7 +603,7 @@
       <section id="quick" hidden>
         <div class="intro">
           <h1>Just a few words</h1>
-          <p>Tap some words or type your own, and we'll turn them into a full review.</p>
+          <p>Tap some words, type your own or say them out loud. Don't worry about spelling or grammar, we'll turn it into a full review.</p>
         </div>
         <div class="chips" id="wordChips" style="margin-bottom: 16px">
           <button type="button" class="chip" data-word="professional">Professional</button>
@@ -566,7 +617,9 @@
           <button type="button" class="chip" data-word="responsive">Responsive</button>
         </div>
         <label for="quickWords" class="sr-only">Words about your experience</label>
-        <textarea id="quickWords" rows="3" placeholder="honest, patient, sold our dairy, good price"></textarea>
+        <div class="voice-wrap">
+          <textarea id="quickWords" rows="3" data-voice placeholder="honest, patient, sold our dairy, good price"></textarea>
+        </div>
         <p class="error-text" id="quickError" role="alert"></p>
         <button type="button" class="btn btn-primary btn-block" style="margin-top: 8px" onclick="generateQuick()">Write my review</button>
         <div class="switch"><button type="button" class="link-btn" onclick="showGuided()">Answer the questions instead</button></div>
@@ -880,6 +933,95 @@
       btn.textContent = 'Copied';
       setTimeout(() => { btn.textContent = 'Copy text only'; }, 2000);
     }
+
+    // ── Voice to text ──────────────────────────────────
+    // Uses the browser's built-in speech recognition (Chrome, Edge, Safari on iPhone and Mac).
+    // Where it isn't supported (e.g. Firefox), no mic button is shown and clients just type.
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4"/></svg>';
+    let activeVoice = null;
+
+    function stopVoice() {
+      if (activeVoice) activeVoice.recognition.stop();
+    }
+
+    if (SpeechRecognition) {
+      document.querySelectorAll('textarea[data-voice]').forEach(box => {
+        const wrap = box.closest('.voice-wrap');
+        wrap.classList.add('has-mic');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mic-btn';
+        btn.innerHTML = micIcon + '<span>Speak</span>';
+        btn.setAttribute('aria-label', 'Speak instead of typing');
+        wrap.appendChild(btn);
+        const note = document.createElement('p');
+        note.className = 'voice-note';
+        note.setAttribute('role', 'status');
+        wrap.after(note);
+
+        btn.addEventListener('click', () => {
+          if (activeVoice && activeVoice.box === box) { stopVoice(); return; }
+          stopVoice();
+
+          const recognition = new SpeechRecognition();
+          recognition.lang = 'en-NZ';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+
+          // Keep what was already typed, and add the spoken words after it
+          const before = box.value.trim();
+          let spoken = '';
+
+          recognition.onresult = e => {
+            let interim = '';
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+              const text = e.results[i][0].transcript;
+              if (e.results[i].isFinal) spoken += text + ' ';
+              else interim += text;
+            }
+            box.value = [before, (spoken + interim).trim()].filter(Boolean).join(before && !/[.,!?]$/.test(before) ? ', ' : ' ');
+            box.dispatchEvent(new Event('input'));
+          };
+
+          recognition.onstart = () => {
+            activeVoice = { recognition, box };
+            btn.classList.add('listening');
+            btn.querySelector('span').textContent = 'Stop';
+            btn.setAttribute('aria-label', 'Stop listening');
+            note.textContent = '';
+          };
+
+          recognition.onerror = e => {
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+              note.textContent = 'Your browser blocked the microphone. You can still type your answer.';
+            } else if (e.error === 'no-speech') {
+              note.textContent = "We didn't hear anything. Tap Speak and try again.";
+            } else if (e.error !== 'aborted') {
+              note.textContent = "Voice didn't work this time. You can still type your answer.";
+            }
+          };
+
+          recognition.onend = () => {
+            if (activeVoice && activeVoice.recognition === recognition) activeVoice = null;
+            btn.classList.remove('listening');
+            btn.querySelector('span').textContent = 'Speak';
+            btn.setAttribute('aria-label', 'Speak instead of typing');
+          };
+
+          try {
+            recognition.start();
+          } catch {
+            note.textContent = "Voice didn't work this time. You can still type your answer.";
+          }
+        });
+      });
+    }
+
+    // Stop listening whenever the client moves on
+    document.addEventListener('click', e => {
+      if (activeVoice && e.target.closest('.btn, .btn-back, .link-btn')) stopVoice();
+    }, true);
 
     goTo(1);
   </script>
