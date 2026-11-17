@@ -8,7 +8,8 @@ A running log of all changes made to the website.
 
 ### Review Page — Fix: reviews not generating
 - NVIDIA retired `meta/llama-3.1-8b-instruct` (API now returns 410 Gone), so every review request failed
-- Switched the Netlify function to `google/gemma-3-12b-it`
+- Switched the Netlify function to `nvidia/nemotron-3.5-lightning-30b-a3b` with thinking turned off (~1s per review)
+- New NVIDIA API key required — the old one stopped working
 
 ---
 

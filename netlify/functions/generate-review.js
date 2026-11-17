@@ -98,10 +98,12 @@ Write a Google review for Sakshi based on these answers. Follow these rules exac
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'google/gemma-3-12b-it',
+        model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.9,
         max_tokens: 300,
+        // Reasoning model: turn thinking off so it answers fast and doesn't use up max_tokens
+        chat_template_kwargs: { enable_thinking: false },
       }),
     });
 
