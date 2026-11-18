@@ -1,7 +1,8 @@
-import { motion, useSpring, useTransform } from 'motion/react'
+import { AnimatePresence, motion, useSpring, useTransform } from 'motion/react'
+import { ChevronDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Label, Reveal } from '@/components/common'
-import { FEES, calculateFee } from '@/data/content'
+import { COMMISSION_TERMS, COMMISSION_TITLE, FEES, calculateFee } from '@/data/content'
 import { cn } from '@/lib/utils'
 
 const money = (n: number) =>
@@ -23,6 +24,7 @@ function Money({ value, className }: { value: number; className?: string }) {
 export function Fees() {
   const [price, setPrice] = useState<number | null>(null)
   const [typed, setTyped] = useState('')
+  const [showTerms, setShowTerms] = useState(false)
   const fee = price ? calculateFee(price) : null
 
   const onType = (raw: string) => {
@@ -124,6 +126,34 @@ export function Fees() {
           <p className={cn('px-6 py-4 text-xs leading-relaxed text-muted-foreground', fee && 'bg-muted/50')}>
             An estimate only, based on the sale price in the Sale and Purchase Agreement. The exact fee is set out in your agency agreement with Clyth MacLeod Business Sales. The minimum total commission is {money(FEES.upfront + FEES.minimumSuccessFee)} plus GST.
           </p>
+
+          <div className="border-t border-border">
+            <button
+              type="button"
+              aria-expanded={showTerms}
+              onClick={() => setShowTerms(v => !v)}
+              className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left text-sm font-semibold hover:bg-muted/60"
+            >
+              Read the full commission wording
+              <ChevronDown className={cn('size-4 shrink-0 transition-transform duration-300', showTerms && 'rotate-180')} />
+            </button>
+            <AnimatePresence initial={false}>
+              {showTerms && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-3 px-6 pb-6 text-sm leading-relaxed">
+                    <p className="font-semibold">{COMMISSION_TITLE}</p>
+                    {COMMISSION_TERMS.map(t => <p key={t} className="text-foreground/80">{t}</p>)}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </Reveal>
     </section>

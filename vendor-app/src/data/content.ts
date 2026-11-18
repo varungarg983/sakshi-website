@@ -122,3 +122,15 @@ export function calculateFee(price: number): FeeBreakdown {
   const gst = totalExGst * FEES.gst
   return { first, second, minimumApplied, successFee, totalExGst, gst, totalIncGst: totalExGst + gst }
 }
+
+// Clyth MacLeod's commission wording, word for word. Shown behind "Read the full commission wording"
+// on the vendor page, and optionally added to the follow-up email.
+export const COMMISSION_TITLE = 'How our commission is calculated'
+export const COMMISSION_TERMS = [
+  'The commission payable to Clyth MacLeod Business Sales for the sale of your business is calculated on the total sale price, on a tiered basis:',
+  'First, the sum of $800 plus GST, which covers AML/CFT compliance and contributes to the initial administration and marketing costs of your listing. This amount is payable immediately upon signing your Agency Agreement and is non-refundable.',
+  'Second, 8% of the first $1,000,000 of the sale price, as shown on the Sale and Purchase Agreement.',
+  'Third, 6% of the amount of the sale price from $1,000,001 and above. (not subject to adjustment).',
+  'Minimum fee applies to the second and third tiers combined: the greater of the amount calculated above, or $18,750. Together with the $800 first-tier component, this brings the minimum total commission payable on any sale to $19,550, plus GST.',
+  'All amounts stated are exclusive of GST, which is payable in addition.',
+]

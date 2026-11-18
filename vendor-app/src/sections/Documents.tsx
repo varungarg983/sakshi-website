@@ -5,6 +5,7 @@ import { Label, Photo, Reveal, btn } from '@/components/common'
 import { CONTACT } from '@/data/content'
 import { GROUPS, presetFor, resolveDocs, type DocGroup } from '@/data/documents'
 import { buildEmail } from '@/lib/email'
+import { displayName } from '@/lib/messages'
 import { store, type Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
@@ -130,7 +131,7 @@ export function Documents({ vendor, id }: { vendor: Vendor | null; id: string | 
 }
 
 export function Contact({ vendor }: { vendor: Vendor | null }) {
-  const name = vendor?.firstName?.trim()
+  const name = displayName(vendor?.firstName)
   return (
     <div className="pb-3 sm:px-3">
       <div className="overflow-hidden rounded-[28px] bg-navy text-white">

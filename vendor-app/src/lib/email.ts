@@ -1,9 +1,10 @@
 import { CONTACT } from '@/data/content'
 import { GROUPS, type Doc } from '@/data/documents'
+import { displayName } from './messages'
 import type { Vendor } from './vendor'
 
 export function buildEmail(vendor: Vendor, docs: Doc[], ticked: Set<string>) {
-  const who = vendor.firstName?.trim()
+  const who = displayName(vendor.firstName)
   const biz = vendor.business?.trim()
   const subject = ['Documents', biz && `for ${biz}`, who && `– ${who}`].filter(Boolean).join(' ')
 

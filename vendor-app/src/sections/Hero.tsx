@@ -3,6 +3,7 @@ import { Phone } from 'lucide-react'
 import { Marquee, Photo, Portrait, QuoteRibbon, btn } from '@/components/common'
 import { CONTACT, LANGUAGES } from '@/data/content'
 import { REVIEWS } from '@/data/reviews'
+import { displayName } from '@/lib/messages'
 import type { Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
@@ -33,7 +34,7 @@ export function TopBar() {
 }
 
 export function Hero({ vendor }: { vendor: Vendor | null }) {
-  const name = vendor?.firstName?.trim()
+  const name = displayName(vendor?.firstName)
   const note = vendor?.note?.trim() || DEFAULT_NOTE
   const allFive = REVIEWS.length > 0 && REVIEWS.every(r => r.rating === 5)
 

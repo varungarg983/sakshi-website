@@ -6,6 +6,12 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Vendor page — follow-up messages and commission wording
+- Link maker now writes two ready-to-copy messages: a text message, and a detailed email with subject line, the exact documents picked, and Sakshi's signature
+- Email can optionally include Clyth MacLeod's commission wording word for word; "Open in email app" starts a draft
+- Fee section has a "Read the full commission wording" drop-down with the exact wording
+- Names typed in capitals (e.g. "VARUN GARG") now show as a first name ("Varun") in messages and on the page
+
 ### Vendor page — pick documents per vendor
 - Link maker now has a document picker: choosing the type of business pre-ticks the usual documents, then Sakshi can tick or untick any, select all or clear, and add her own custom items
 - Document library (financials, staff and wages, premises, equipment and stock, licences and agreements) with a short tip for each, in `vendor-app/src/data/documents.ts`

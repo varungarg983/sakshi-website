@@ -1,8 +1,9 @@
-import { Check, Copy, ExternalLink, Loader2, Plus, Share2, X } from 'lucide-react'
+import { Check, Copy, ExternalLink, Loader2, Mail, MessageSquare, Plus, Share2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { INDUSTRIES, SITUATIONS, type Industry } from '@/data/content'
 import { CUSTOM_PREFIX, DOCUMENTS, GROUPS, isCustom, presetFor, type DocGroup } from '@/data/documents'
+import { displayName, emailMessage, textMessage } from '@/lib/messages'
 import { API, store } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
@@ -19,7 +20,9 @@ export function LinkMaker() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [link, setLink] = useState('')
-  const [copied, setCopied] = useState<'link' | 'message' | ''>('')
+  const [copied, setCopied] = useState<'link' | 'message' | 'subject' | ''>('')
+  const [kind, setKind] = useState<'text' | 'email'>('text')
+  const [withCommission, setWithCommission] = useState(false)
 
   const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -31,7 +34,9 @@ export function LinkMaker() {
     setDocs(d => [...presetFor(industry), ...d.filter(isCustom)])
   }
 
-  const message = `Hi ${form.firstName.trim() || 'there'}, great talking with you today. As promised, here's a page with what other owners say about working with me, and the documents I'll need when you're ready: ${link}\n\nSakshi`
+  const details = { name: form.firstName, business: form.business, link, docs }
+  const email = emailMessage(details, withCommission)
+  const message = kind === 'text' ? textMessage(details) : email.body
 
   async function create(e: React.FormEvent) {
     e.preventDefault()
@@ -59,9 +64,9 @@ export function LinkMaker() {
     }
   }
 
-  async function copy(what: 'link' | 'message') {
+  async function copy(what: 'link' | 'message' | 'subject') {
     try {
-      await navigator.clipboard.writeText(what === 'link' ? link : message)
+      await navigator.clipboard.writeText(what === 'link' ? link : what === 'subject' ? email.subject : message)
       setCopied(what)
       setTimeout(() => setCopied(''), 2000)
     } catch {
@@ -71,6 +76,8 @@ export function LinkMaker() {
 
   const reset = () => {
     setLink('')
+    setKind('text')
+    setWithCommission(false)
     setForm(EMPTY)
     setDocs(presetFor())
   }
@@ -83,7 +90,7 @@ export function LinkMaker() {
 
       {link ? (
         <div className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-5">
-          <p className="font-semibold">Link ready for {form.firstName || 'your vendor'}</p>
+          <p className="font-semibold">Link ready for {displayName(form.firstName) || 'your vendor'}</p>
           <p className="rounded-lg bg-muted px-3 py-2.5 font-mono text-sm break-all">{link}</p>
           <div className="grid grid-cols-2 gap-2">
             <Button size="lg" variant="outline" className="h-11" onClick={() => copy('link')}>
@@ -94,16 +101,46 @@ export function LinkMaker() {
             </Button>
           </div>
           <div>
-            <p className="mb-1.5 text-sm font-semibold">Message to send with it</p>
-            <p className="rounded-lg bg-muted px-3 py-2.5 text-sm whitespace-pre-line">{message}</p>
+            <p className="mb-2 text-sm font-semibold">Message to send with it</p>
+            <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-sm font-semibold" role="tablist">
+              {([['text', 'Text message', MessageSquare], ['email', 'Email', Mail]] as const).map(([k, l, Icon]) => (
+                <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)}
+                  className={cn('flex items-center justify-center gap-1.5 rounded-full py-2 transition-colors', kind === k ? 'bg-card shadow-sm' : 'text-muted-foreground')}>
+                  <Icon className="size-4" /> {l}
+                </button>
+              ))}
+            </div>
+
+            {kind === 'email' && (
+              <>
+                <label className="mb-3 flex cursor-pointer items-center gap-2.5 text-sm">
+                  <input type="checkbox" checked={withCommission} onChange={e => setWithCommission(e.target.checked)} className="size-4 accent-[var(--foreground)]" />
+                  Include the commission wording
+                </label>
+                <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2.5 text-sm">
+                  <span><span className="text-muted-foreground">Subject: </span>{email.subject}</span>
+                  <button type="button" onClick={() => copy('subject')} className="shrink-0 font-semibold underline decoration-ink/30 underline-offset-4">
+                    {copied === 'subject' ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            <p className="max-h-80 overflow-y-auto rounded-lg bg-muted px-3 py-2.5 text-sm whitespace-pre-line">{message}</p>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <Button size="lg" className="h-11" onClick={() => copy('message')}>
-                {copied === 'message' ? <Check /> : <Copy />} Copy message
+                {copied === 'message' ? <Check /> : <Copy />} Copy {kind === 'email' ? 'email' : 'message'}
               </Button>
-              {'share' in navigator && (
-                <Button size="lg" variant="outline" className="h-11" onClick={() => navigator.share({ text: message }).catch(() => {})}>
-                  <Share2 /> Share
+              {kind === 'email' ? (
+                <Button size="lg" variant="outline" className="h-11" render={<a href={email.mailto} />} nativeButton={false}>
+                  <Mail /> Open in email app
                 </Button>
+              ) : (
+                'share' in navigator && (
+                  <Button size="lg" variant="outline" className="h-11" onClick={() => navigator.share({ text: message }).catch(() => {})}>
+                    <Share2 /> Share
+                  </Button>
+                )
               )}
             </div>
           </div>
