@@ -5,11 +5,14 @@
 // industry:  one of the keys in INDUSTRIES (content.ts), e.g. 'cafe', 'cleaning'; 'other' if unknown
 // situation: optional, one of the keys in SITUATIONS (content.ts), e.g. 'retiring'
 // name:      as shown on Google, shortened to first name and last initial
+// pull:      one sentence copied from the review, shown large
 
 import type { Industry, Situation } from './content'
 
 export type Review = {
   name: string
+  // A sentence from the review, word for word, for the large quote display
+  pull: string
   role?: 'seller' | 'buyer'
   industry: Industry
   situation?: Situation
@@ -20,6 +23,7 @@ export type Review = {
 export const REVIEWS: Review[] = [
   {
     name: 'Sumit G.',
+    pull: 'She found a buyer in just the first week after taking over from another agent.',
     role: 'seller',
     industry: 'other',
     rating: 5,
@@ -27,6 +31,7 @@ export const REVIEWS: Review[] = [
   },
   {
     name: 'Sunny',
+    pull: 'From start to finish, she was very honest, clear, and always kept us updated.',
     role: 'seller',
     industry: 'other',
     rating: 5,
@@ -34,6 +39,7 @@ export const REVIEWS: Review[] = [
   },
   {
     name: 'Sapan P.',
+    pull: 'Selling a business can feel overwhelming but her calm guidance and clear communication made everything far easier than we expected.',
     role: 'seller',
     industry: 'other',
     rating: 5,
@@ -41,12 +47,14 @@ export const REVIEWS: Review[] = [
   },
   {
     name: 'Paul P.',
+    pull: 'She made what could have been a complex process look incredibly easy and stress-free.',
     industry: 'cafe',
     rating: 5,
     text: 'Working with Sakshi Agarwal from start to finish on this business has been an absolute pleasure. Throughout the entire process of getting the deal over the line for Ed’s Cafe, her communication was nothing short of exceptional. She kept us constantly updated on our progress, ensuring I always knew exactly where things stood.\nWhat really stood out was how seamlessly she managed the transition and handshake between the vendors and the landlords. she made what could have been a complex process look incredibly easy and stress-free.\nSakshi is professional, proactive, and truly dedicated to her clients. We cannot recommend her highly enough to anyone looking for a top-tier professional, and I look forward to working on many more deals with her in the future!',
   },
   {
     name: 'Mak B.',
+    pull: 'Her clear and responsive communication was invaluable, especially given the confidentiality required throughout the process.',
     role: 'buyer',
     industry: 'other',
     rating: 5,
@@ -54,18 +62,21 @@ export const REVIEWS: Review[] = [
   },
   {
     name: 'Yashraj N.',
+    pull: 'She is trustworthy, reliable, and simply amazing at what she does.',
     industry: 'other',
     rating: 5,
     text: 'Sakshi was always available to answer my questions, explained everything clearly, and made the whole process smooth and stress-free.\nI appreciate her dedication and hard work. If anyone is looking to buy or sell a business, I would recommend Sakshi. She is trustworthy, reliable, and simply amazing at what she does.',
   },
   {
     name: 'Pardeep G.',
+    pull: 'From the beginning, they were extremely helpful, honest, and transparent.',
     industry: 'other',
     rating: 5,
     text: 'I had a fantastic experience working with Sakshi Aggarwal.\nFrom the beginning, they were extremely helpful, honest, and transparent. Their knowledge of the market and attention to detail really stood out. They guided me through every step and made sure everything was handled perfectly. I truly appreciate their hard work and would definitely recommend them to others.',
   },
   {
     name: 'Ravinder S.',
+    pull: 'She was being really honest and always there to answer any queries we had.',
     role: 'buyer',
     industry: 'other',
     rating: 5,
@@ -73,18 +84,21 @@ export const REVIEWS: Review[] = [
   },
   {
     name: 'Massey Foodmart',
+    pull: 'I really appreciate how available and responsive you’ve been whenever I needed clarification.',
     industry: 'retail',
     rating: 5,
     text: 'Hi Sakshi,\n\nThank you so much for your support throughout. You’ve been very helpful in answering all my questions, and I really appreciate how available and responsive you’ve been whenever I needed clarification. It’s been a pleasure dealing with you.',
   },
   {
     name: 'Minku G.',
+    pull: 'She was very professional and incredibly knowledgeable.',
     industry: 'other',
     rating: 5,
     text: 'Very grateful that I met with Sakshi. I had an absolutely fantastic experience working with her. From the beginning, she was very professional and incredibly knowledgeable.',
   },
   {
     name: 'Aman T.',
+    pull: 'Very professional, got job done really quickly.',
     industry: 'other',
     rating: 5,
     text: 'very Professional, got job done really quickly thank you',

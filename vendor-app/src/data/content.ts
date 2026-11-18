@@ -46,14 +46,16 @@ export const DEAL_STORIES = [
   {
     business: 'Cleaning business',
     worry: 'The owner wanted a quiet sale without clients or staff hearing about it.',
-    result: 'Sold before it was ever listed publicly, to a buyer from Sakshi’s own buyer pool.',
+    result: 'Sold before it was ever listed publicly, to a buyer from my own buyer pool.',
     highlight: 'Sold before listing',
+    stat: 'Off-market',
   },
   {
     business: 'Café',
     worry: 'The owner was worried it would sit on the market for months.',
     result: 'Sold within one week of marketing starting.',
     highlight: 'Sold in one week',
+    stat: '1 week',
   },
 ]
 

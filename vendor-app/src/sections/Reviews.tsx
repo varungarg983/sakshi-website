@@ -1,13 +1,13 @@
-import { AnimatePresence, motion } from 'motion/react'
-import { ExternalLink, Quote } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { Section, Stars, Reveal, linkButton } from '@/components/common'
-import { CONTACT, GOOGLE_STATS, INDUSTRIES, SITUATIONS, type Industry } from '@/data/content'
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react'
+import { ArrowUpRight } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { Label, Reveal, btn } from '@/components/common'
+import { CONTACT, INDUSTRIES, SITUATIONS, type Industry } from '@/data/content'
 import { REVIEWS, type Review } from '@/data/reviews'
 import type { Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
-type Filter = 'all' | 'seller' | 'buyer' | Industry
+const STORY = 5
 const PAGE = 4
 
 // Reviews from owners in the same industry or situation come first
@@ -19,130 +19,6 @@ function score(r: Review, v: Vendor | null) {
 }
 const isMatch = (r: Review, v: Vendor | null) =>
   !!v && ((!!v.industry && v.industry !== 'other' && r.industry === v.industry) || (!!v.situation && r.situation === v.situation))
-
-export function Reviews({ vendor }: { vendor: Vendor | null }) {
-  const [filter, setFilter] = useState<Filter>('all')
-  const [shown, setShown] = useState(PAGE)
-
-  const sorted = useMemo(
-    () => REVIEWS.map((r, i) => ({ r, i })).sort((a, b) => score(b.r, vendor) - score(a.r, vendor) || a.i - b.i).map(x => x.r),
-    [vendor],
-  )
-  const industries = useMemo(() => [...new Set(REVIEWS.map(r => r.industry))], [])
-  const featured = sorted.find(r => isMatch(r, vendor)) ?? sorted[0]
-  const rest = sorted.filter(r => r !== featured)
-  const filtered = rest.filter(r => filter === 'all' || r.role === filter || r.industry === filter)
-
-  const filters: { key: Filter; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'seller', label: 'Sellers' },
-    { key: 'buyer', label: 'Buyers' },
-    ...industries.filter(i => i !== 'other').map(i => ({ key: i as Filter, label: INDUSTRIES[i] })),
-  ]
-
-  const googleLink = (
-    <a href={CONTACT.googleReviews} target="_blank" rel="noopener noreferrer"
-      className={cn(linkButton, 'border border-border bg-card text-foreground hover:bg-muted')}>
-      Read every review on Google <ExternalLink />
-    </a>
-  )
-
-  return (
-    <Section
-      id="reviews"
-      eyebrow="In their words"
-      title="What other business owners say"
-      intro="Real reviews from people I’ve helped buy and sell businesses. Don’t just take my word for it: you can read my reviews on Google too."
-    >
-      {GOOGLE_STATS.rating && (
-        <Reveal className="mb-8 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-          <span className="font-heading text-5xl font-bold">{GOOGLE_STATS.rating.toFixed(1)}</span>
-          <div>
-            <Stars rating={Math.round(GOOGLE_STATS.rating)} className="[&_svg]:size-5" />
-            <p className="mt-1 text-sm text-muted-foreground">
-              Google rating{GOOGLE_STATS.count ? `, ${GOOGLE_STATS.count} reviews` : ''}
-            </p>
-          </div>
-        </Reveal>
-      )}
-
-      {featured ? (
-        <>
-          <Reveal>
-            <figure className="relative overflow-hidden rounded-3xl bg-gold-soft p-7 sm:p-10">
-              <Quote className="absolute top-5 right-6 size-16 text-gold/20" />
-              {isMatch(featured, vendor) && (
-                <p className="mb-4 inline-block rounded-full bg-gold px-3 py-1 text-xs font-semibold text-navy">
-                  From an owner in a similar position
-                </p>
-              )}
-              <Stars rating={featured.rating} />
-              <blockquote className={cn('mt-4 font-heading leading-snug whitespace-pre-line', featured.text.length > 350 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl')}>“{featured.text}”</blockquote>
-              <figcaption className="mt-5 text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{featured.name}</span> · {describe(featured)}
-              </figcaption>
-            </figure>
-          </Reveal>
-
-          {rest.length > 0 && (
-            <>
-              <div className="-mx-4 mt-10 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
-                {filters.map(f => (
-                  <button
-                    key={f.key}
-                    onClick={() => { setFilter(f.key); setShown(PAGE) }}
-                    className={cn(
-                      'shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                      filter === f.key ? 'border-navy bg-navy text-white' : 'border-border bg-card hover:bg-muted',
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-
-              <motion.div layout className="mt-5 grid gap-4 sm:grid-cols-2">
-                <AnimatePresence mode="popLayout">
-                  {filtered.slice(0, shown).map(r => (
-                    <motion.figure
-                      layout
-                      key={r.name + r.text.slice(0, 20)}
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
-                    >
-                      <Stars rating={r.rating} />
-                      <blockquote className="mt-3 flex-1 leading-relaxed whitespace-pre-line">“{r.text}”</blockquote>
-                      <figcaption className="mt-4 text-sm text-muted-foreground">
-                        <span className="font-semibold text-foreground">{r.name}</span> · {describe(r)}
-                      </figcaption>
-                    </motion.figure>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-              {filtered.length === 0 && <p className="mt-5 text-muted-foreground">No reviews in this group yet.</p>}
-
-              {filtered.length > shown && (
-                <button onClick={() => setShown(s => s + PAGE)}
-                  className="mt-6 w-full rounded-full border border-border py-3 text-sm font-semibold hover:bg-muted">
-                  Show more reviews ({filtered.length - shown} more)
-                </button>
-              )}
-            </>
-          )}
-          <div className="mt-8">{googleLink}</div>
-        </>
-      ) : (
-        <Reveal className="rounded-2xl border border-border bg-card p-6">
-          <p className="mb-5 text-muted-foreground">My reviews are all on my Google profile, where you can read them in full.</p>
-          {googleLink}
-        </Reveal>
-      )}
-    </Section>
-  )
-}
 
 const NOUN: Record<Industry, string> = {
   cafe: 'a café',
@@ -157,4 +33,153 @@ function describe(r: Review) {
   const why = r.situation ? ` · ${SITUATIONS[r.situation]}` : ''
   if (!r.role) return r.industry === 'other' ? `Google review${why}` : `${INDUSTRIES[r.industry]}${why}`
   return `${r.role === 'seller' ? 'Sold' : 'Bought'} ${NOUN[r.industry]}${why}`
+}
+
+export function Reviews({ vendor }: { vendor: Vendor | null }) {
+  const sorted = useMemo(
+    () => REVIEWS.map((r, i) => ({ r, i })).sort((a, b) => score(b.r, vendor) - score(a.r, vendor) || a.i - b.i).map(x => x.r),
+    [vendor],
+  )
+  const story = sorted.slice(0, STORY)
+
+  return (
+    <section id="reviews" className="scroll-mt-20">
+      <div className="mx-auto max-w-4xl px-4 pt-24 text-center sm:pt-36">
+        <Reveal>
+          <Label>In their words</Label>
+          <h2 className="display mt-5 text-5xl text-balance sm:text-7xl">
+            What owners say <em>after</em> working with me.
+          </h2>
+        </Reveal>
+      </div>
+
+      {story.length > 0 && <ReviewStory story={story} vendor={vendor} />}
+      <AllReviews reviews={sorted} />
+    </section>
+  )
+}
+
+// The section pins in place while you scroll, and the quote changes with each step
+function ReviewStory({ story, vendor }: { story: Review[]; vendor: Vendor | null }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [active, setActive] = useState(0)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  useMotionValueEvent(scrollYProgress, 'change', p => setActive(Math.min(story.length - 1, Math.max(0, Math.floor(p * story.length)))))
+
+  const jump = (i: number) => {
+    const el = ref.current
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.scrollY
+    const span = el.offsetHeight - window.innerHeight
+    window.scrollTo({ top: top + (span * (i + 0.5)) / story.length, behavior: 'smooth' })
+  }
+
+  const r = story[active]
+  return (
+    <div ref={ref} style={{ height: `${story.length * 75 + 25}vh` }} className="relative">
+      <div className="sticky top-0 flex h-dvh items-center">
+        <div className="mx-auto grid w-full max-w-5xl gap-6 px-4 md:grid-cols-[220px_1fr] md:gap-12">
+          <ol className="hidden flex-col justify-center gap-1 md:flex">
+            {story.map((s, i) => (
+              <li key={s.name}>
+                <button
+                  onClick={() => jump(i)}
+                  className={cn(
+                    'w-full border-l-2 py-2 pl-4 text-left font-heading text-xl transition-colors',
+                    i === active ? 'border-ink text-ink' : 'border-border text-muted-foreground hover:text-ink',
+                  )}
+                >
+                  {s.name}
+                </button>
+              </li>
+            ))}
+          </ol>
+
+          <div className="relative flex min-h-[460px] flex-col overflow-hidden rounded-[28px] bg-navy p-7 text-white sm:min-h-[520px] sm:p-12">
+            <div className="flex gap-1.5 md:hidden">
+              {story.map((_, i) => (
+                <button key={i} onClick={() => jump(i)} aria-label={`Review ${i + 1}`} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
+                  <span className={cn('block h-full bg-accent transition-all duration-500', i <= active ? 'w-full' : 'w-0')} />
+                </button>
+              ))}
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.figure
+                key={active}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-1 flex-col justify-between pt-8 md:pt-0"
+              >
+                <div>
+                  {isMatch(r, vendor) && (
+                    <p className="mb-6 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-ink">
+                      From an owner in a similar position
+                    </p>
+                  )}
+                  <p className="text-accent" aria-label="5 out of 5 stars">{'★'.repeat(r.rating)}</p>
+                  <blockquote className="display mt-5 text-[2.1rem] leading-[1.05] text-balance sm:text-5xl">“{r.pull}”</blockquote>
+                </div>
+                <figcaption className="mt-8 flex items-end justify-between gap-4 text-sm">
+                  <span>
+                    <span className="block text-base font-semibold">{r.name}</span>
+                    <span className="text-white/60">{describe(r)}</span>
+                  </span>
+                  <span className="font-heading text-lg text-white/50 italic">{active + 1} / {story.length}</span>
+                </figcaption>
+              </motion.figure>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AllReviews({ reviews }: { reviews: Review[] }) {
+  const [shown, setShown] = useState(PAGE)
+  const googleLink = (
+    <a href={CONTACT.googleReviews} target="_blank" rel="noopener noreferrer" className={cn(btn.base, btn.ghost)}>
+      Read them on Google <ArrowUpRight />
+    </a>
+  )
+  return (
+    <div className="mx-auto max-w-5xl px-4 pt-16 pb-8">
+      <Reveal className="flex flex-col items-start justify-between gap-4 border-t border-ink/15 pt-8 sm:flex-row sm:items-end">
+        <h3 className="display text-4xl">Every review, <em>in full.</em></h3>
+        {googleLink}
+      </Reveal>
+      {reviews.length === 0 ? (
+        <p className="mt-8 text-muted-foreground">My reviews are all on my Google profile.</p>
+      ) : (
+        <>
+          <div className="mt-10 gap-10 sm:columns-2">
+            <AnimatePresence initial={false}>
+              {reviews.slice(0, shown).map(r => (
+                <motion.figure
+                  key={r.name}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-10 break-inside-avoid border-t border-border pt-5"
+                >
+                  <p className="text-sm text-gold" aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
+                  <blockquote className="mt-3 text-[1.05rem] leading-relaxed whitespace-pre-line text-foreground/85">{r.text}</blockquote>
+                  <figcaption className="mt-4 text-sm">
+                    <span className="font-semibold">{r.name}</span>
+                    <span className="text-muted-foreground"> · {describe(r)}</span>
+                  </figcaption>
+                </motion.figure>
+              ))}
+            </AnimatePresence>
+          </div>
+          {reviews.length > shown && (
+            <button onClick={() => setShown(reviews.length)} className={cn(btn.base, btn.ghost, 'w-full')}>
+              Show all {reviews.length} reviews
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
 }

@@ -5,8 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: 'Playfair Display', Georgia, serif;
-    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-heading: 'EB Garamond', Georgia, serif;
+    --font-sans: 'Figtree', system-ui, sans-serif;
+    --color-ink: var(--foreground);
+    --color-accent-strong: var(--accent-strong);
     --color-gold: var(--gold);
     --color-gold-soft: var(--gold-soft);
     --color-navy: var(--navy);
@@ -51,27 +53,28 @@
 }
 
 :root {
-    --background: #faf7f1;
-    --foreground: #1a2e44;
+    --background: #fbf8ef;
+    --foreground: #1c1c1a;
     --card: #ffffff;
-    --card-foreground: #1a2e44;
+    --card-foreground: #1c1c1a;
     --popover: #ffffff;
-    --popover-foreground: #1a2e44;
-    --primary: #1a2e44;
+    --popover-foreground: #1c1c1a;
+    --primary: #1c1c1a;
     --primary-foreground: #ffffff;
-    --secondary: #f1ece2;
-    --secondary-foreground: #1a2e44;
-    --muted: #f1ece2;
-    --muted-foreground: #5b6673;
-    --accent: #f6efdf;
-    --accent-foreground: #1a2e44;
+    --secondary: #f2eee2;
+    --secondary-foreground: #1c1c1a;
+    --muted: #f2eee2;
+    --muted-foreground: #5f5e57;
+    --accent: #ecdcaa;
+    --accent-strong: #e2cb84;
+    --accent-foreground: #1c1c1a;
     --destructive: oklch(0.577 0.245 27.325);
-    --border: #e6dfd1;
-    --input: #d9d1c1;
-    --ring: #b8922a;
-    --navy: #1a2e44;
-    --gold: #b8922a;
-    --gold-soft: #f6efdf;
+    --border: #e4dfd0;
+    --input: #cfc8b6;
+    --ring: #a07d2c;
+    --navy: #133246;
+    --gold: #a07d2c;
+    --gold-soft: #f3e8c8;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -134,4 +137,10 @@
     }
 }
 html { scroll-behavior: smooth; }
-body { -webkit-font-smoothing: antialiased; }
+body { -webkit-font-smoothing: antialiased; overflow-x: clip; }
+
+@keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.marquee { animation: marquee 40s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } html { scroll-behavior: auto; } }
+.display { font-family: var(--font-heading); font-weight: 400; letter-spacing: -0.03em; line-height: 0.95; }
+.display em { font-style: italic; }

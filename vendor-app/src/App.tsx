@@ -1,6 +1,7 @@
+import { MotionConfig } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { LinkMaker } from './LinkMaker'
-import { Hero } from './sections/Hero'
+import { Hero, TopBar } from './sections/Hero'
 import { Reviews } from './sections/Reviews'
 import { Confidential, Credentials, Honest, Journey, Stories } from './sections/Trust'
 import { Contact, Documents, StickyBar } from './sections/Documents'
@@ -32,10 +33,11 @@ function VendorPage() {
   }, [id])
 
   // Brief blank screen while the personal details load, so the greeting doesn't jump
-  if (!ready) return <div className="min-h-dvh bg-navy" />
+  if (!ready) return <div className="min-h-dvh bg-background" />
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
+      <TopBar />
       <Hero vendor={vendor} />
       <main>
         <Reviews vendor={vendor} />
@@ -46,8 +48,8 @@ function VendorPage() {
         <Credentials />
         <Documents vendor={vendor} id={id} />
       </main>
-      <Contact />
+      <Contact vendor={vendor} />
       <StickyBar />
-    </>
+    </MotionConfig>
   )
 }

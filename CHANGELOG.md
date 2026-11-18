@@ -6,6 +6,15 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Vendor page — editorial redesign
+- Redesigned to feel less templated, inspired by wisprflow.ai: cream background, EB Garamond headings with italic emphasis, Figtree body text
+- Hero ribbon with real review quotes drifting along a curve, and a scrolling strip of proof points
+- Reviews now pin in place while the quote changes as you scroll, followed by every review in full
+- Confidentiality panel opens out as it scrolls in; honest promises light up word by word; journey and documents use sticky side headings
+- Added a short verbatim pull quote to each review for the large display
+- Added `.mcp.json` so Claude Code can use the shadcn MCP server
+- Added real photos of Sakshi (top of page, recent sales, journey, closing panel) plus a cropped portrait for the avatar; resized with WebP versions in `vendor-app/public/photos/`
+
 ### Vendor follow-up page (new, React)
 - New page at `/vendor` to send sellers after a first call, built with React, Vite, Tailwind and shadcn/ui in `vendor-app/` (Netlify builds it automatically)
 - Personal greeting and note from Sakshi, with reviews from owners in the same industry or situation shown first; filters, "show more" and a link to Google reviews
