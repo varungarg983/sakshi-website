@@ -9,79 +9,72 @@ export function displayName(raw?: string) {
   return shouty ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : first
 }
 
-type Details = { name?: string; business?: string; link: string; docs: string[] }
+export type MessageKind = 'text' | 'whatsapp' | 'email'
 
-// The chosen documents as a grouped, bulleted list
-function docList(docs: string[]): string[] {
-  const list: string[] = []
-  const picked = resolveDocs(docs)
+export type MessageDetails = {
+  name?: string
+  business?: string
+  link: string
+  docs: string[]
+  // Personal opening, written by Sakshi or drafted by the AI from her notes
+  opening?: string
+  withCommission: boolean
+}
+
+const DEFAULT_OPENING = 'It was lovely speaking with you today.'
+
+// Follows the message Sakshi sends after meeting an owner. Only the opening is personal;
+// the document list and commission wording always come from fixed text.
+export function buildMessage(kind: MessageKind, d: MessageDetails) {
+  const who = displayName(d.name) || 'there'
+  const biz = d.business?.trim()
+  // WhatsApp shows *text* in bold
+  const heading = (t: string) => (kind === 'whatsapp' ? `*${t}*` : t)
+
+  const docLines: string[] = []
+  const picked = resolveDocs(d.docs)
   for (const [group, label] of Object.entries(GROUPS)) {
-    const inGroup = picked.filter(d => d.group === group)
+    const inGroup = picked.filter(doc => doc.group === group)
     if (!inGroup.length) continue
-    list.push(label)
-    for (const d of inGroup) list.push(`• ${d.label}`)
-    list.push('')
+    docLines.push(heading(label), '')
+    for (const doc of inGroup) docLines.push(`• ${doc.label}`)
+    docLines.push('')
   }
-  return list
-}
 
-const commission = (): string[] => [COMMISSION_TITLE, '', ...COMMISSION_TERMS.flatMap(p => [p, ''])]
-
-// For a text or WhatsApp message. Complete on its own, so it works even if the link isn't opened.
-export function textMessage({ name, business, link, docs }: Details) {
-  const who = displayName(name) || 'there'
-  const biz = business?.trim()
-  const list = docList(docs)
-  return [
-    `Hi ${who}, thanks for your time on the phone today${biz ? ` about ${biz}` : ''}.`,
-    '',
-    `As promised, here's a page I've put together for you, with reviews from other owners I've worked with and how I keep your sale confidential: ${link}`,
-    '',
-    `Everything you need is also written below, in case the link doesn't open.`,
-    '',
-    ...(list.length ? [`When you're ready, these are the documents I'll need:`, '', ...list] : []),
-    `Photos, screenshots or PDFs are all fine. No rush, send them through whenever you're ready.`,
-    '',
-    ...commission(),
-    `Any questions, just call or text me on ${CONTACT.phoneDisplay}.`,
-    '',
-    CONTACT.firstName,
-  ].join('\n')
-}
-
-// Fuller version for email, listing the exact documents picked
-export function emailMessage({ name, business, link, docs }: Details, withCommission: boolean) {
-  const who = displayName(name)
-  const biz = business?.trim()
-  const subject = `Great talking today${who ? `, ${who}` : ''}: next steps for ${biz || 'your business'}`
-  const list = docList(docs)
+  const commission = d.withCommission
+    ? [heading(COMMISSION_TITLE), '', ...COMMISSION_TERMS.flatMap(p => [p, ''])]
+    : []
 
   const body = [
-    `Hi ${who || 'there'},`,
+    `Hi ${who},`,
     '',
-    `Thanks for taking the time to talk with me today about ${biz || 'your business'}. As promised, here's a page I've put together just for you:`,
-    link,
+    d.opening?.trim() || DEFAULT_OPENING,
     '',
-    `On it you'll find:`,
-    '• what other business owners say about working with me',
-    '• how I keep your sale confidential',
-    '• how my fee works',
-    '• the documents I’ll need, with a button that writes the email for you',
+    `As discussed, please find the link below. I’ve put together a page where you can read reviews and testimonials from other business owners and purchasers I’ve successfully worked with, and learn more about how I maintain confidentiality throughout the sale process.`,
     '',
-    `In case the link doesn't open, everything you need is also written below.`,
+    d.link,
     '',
-    ...(list.length ? [`When you're ready, these are the documents I'll need:`, '', ...list] : []),
-    `Photos, screenshots or PDFs are all fine, and you can send them over a few emails if that's easier. There's no rush.`,
+    ...(docLines.length
+      ? [`Could you please arrange the following documents and email them to me at ${CONTACT.email} as soon as possible?`, '', ...docLines]
+      : []),
+    ...commission,
+    `If you have any questions or need clarification on anything, please feel free to call or text me on ${CONTACT.phoneDisplay}.`,
     '',
-    ...(withCommission ? commission() : []),
-    `Everything you share with me stays confidential. If you have any questions at all, call or text me on ${CONTACT.phoneDisplay}, or just reply to this email.`,
+    'Looking forward to working with you.',
     '',
     'Kind regards,',
-    '',
-    CONTACT.name,
-    `${CONTACT.role} | ${CONTACT.company}`,
-    `${CONTACT.phoneDisplay} | ${CONTACT.email}`,
+    CONTACT.firstName,
+    'Clyth MacLeod Business Sales',
   ].join('\n')
 
-  return { subject, body, mailto: `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}` }
+  const subject = `${biz ? `${biz}: ` : ''}documents and next steps`
+  return {
+    body,
+    subject: subject.charAt(0).toUpperCase() + subject.slice(1),
+  }
 }
+
+export const mailtoDraft = (subject: string, body: string) =>
+  `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+
+export const whatsappShare = (body: string) => `https://wa.me/?text=${encodeURIComponent(body)}`

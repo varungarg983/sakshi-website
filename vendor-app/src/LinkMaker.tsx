@@ -1,30 +1,36 @@
-import { Check, Copy, ExternalLink, Loader2, Mail, MessageSquare, Plus, Share2, X } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { INDUSTRIES, SITUATIONS, type Industry } from '@/data/content'
-import { CUSTOM_PREFIX, DOCUMENTS, GROUPS, isCustom, presetFor, type DocGroup } from '@/data/documents'
-import { displayName, emailMessage, textMessage } from '@/lib/messages'
+import { isCustom, presetFor } from '@/data/documents'
 import { API, store } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
+import { DocPicker } from './maker/DocPicker'
+import { NotesBox } from './maker/NotesBox'
+import { Recent, type RecentLink } from './maker/Recent'
+import { Result } from './maker/Result'
+import { field, label } from './maker/styles'
 
-const field = 'mt-1.5 w-full rounded-xl border border-input bg-card px-3.5 py-3 text-base outline-none focus:border-ink focus:ring-3 focus:ring-ink/10'
-const label = 'block text-sm font-semibold'
+const DRAFT_API = '/.netlify/functions/vendor-draft'
+const EMPTY = { firstName: '', business: '', industry: '', situation: '', note: '', opening: '' }
+type Form = typeof EMPTY
 
-const EMPTY = { firstName: '', business: '', industry: '', situation: '', note: '' }
+type Made = { id: string; form: Form; docs: string[] }
 
-// Private page for Sakshi: makes a personal link to send a vendor after a call
+// Private page for Sakshi: makes a personal link and follow-up message for a vendor after a meeting
 export function LinkMaker() {
   const [passcode, setPasscode] = useState(() => store.get('vendor-passcode', ''))
-  const [form, setForm] = useState(EMPTY)
+  const [notes, setNotes] = useState('')
+  const [form, setForm] = useState<Form>(EMPTY)
   const [docs, setDocs] = useState<string[]>(() => presetFor())
   const [busy, setBusy] = useState(false)
+  const [drafting, setDrafting] = useState(false)
+  const [drafted, setDrafted] = useState(false)
   const [error, setError] = useState('')
-  const [link, setLink] = useState('')
-  const [copied, setCopied] = useState<'link' | 'message' | 'subject' | ''>('')
-  const [kind, setKind] = useState<'text' | 'email'>('text')
-  const [withCommission, setWithCommission] = useState(true)
+  const [draftError, setDraftError] = useState('')
+  const [made, setMade] = useState<Made | null>(null)
 
-  const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
 
   // Picking a type of business pre-ticks its usual documents, keeping any custom ones
@@ -34,9 +40,40 @@ export function LinkMaker() {
     setDocs(d => [...presetFor(industry), ...d.filter(isCustom)])
   }
 
-  const details = { name: form.firstName, business: form.business, link, docs }
-  const email = emailMessage(details, withCommission)
-  const message = kind === 'text' ? textMessage(details) : email.body
+  async function post(url: string, payload: object) {
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, passcode }) })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.')
+    store.set('vendor-passcode', passcode)
+    return data
+  }
+
+  async function draft() {
+    if (!passcode) {
+      setDraftError('Enter your passcode at the bottom first.')
+      return
+    }
+    setDrafting(true)
+    setDraftError('')
+    try {
+      const d = await post(DRAFT_API, { notes })
+      setForm(f => ({
+        firstName: d.firstName || f.firstName,
+        business: d.business || f.business,
+        industry: d.industry || f.industry,
+        situation: d.situation || f.situation,
+        note: d.pageNote || f.note,
+        opening: d.opening || f.opening,
+      }))
+      const industry = (d.industry || form.industry) as Industry | ''
+      setDocs(cur => [...new Set([...(d.industry ? presetFor(industry) : cur.filter(x => !isCustom(x))), ...(d.extraDocs ?? []), ...cur.filter(isCustom)])])
+      setDrafted(true)
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : 'Could not draft from your notes.')
+    } finally {
+      setDrafting(false)
+    }
+  }
 
   async function create(e: React.FormEvent) {
     e.preventDefault()
@@ -47,15 +84,8 @@ export function LinkMaker() {
     setBusy(true)
     setError('')
     try {
-      const res = await fetch(API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, docs, passcode }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Could not make the link. Please try again.')
-      store.set('vendor-passcode', passcode)
-      setLink(`${location.origin}/v/${data.id}`)
+      const data = await post(API, { ...form, docs })
+      setMade({ id: data.id, form, docs })
       window.scrollTo({ top: 0 })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not make the link.')
@@ -64,217 +94,87 @@ export function LinkMaker() {
     }
   }
 
-  async function copy(what: 'link' | 'message' | 'subject') {
-    try {
-      await navigator.clipboard.writeText(what === 'link' ? link : what === 'subject' ? email.subject : message)
-      setCopied(what)
-      setTimeout(() => setCopied(''), 2000)
-    } catch {
-      /* clipboard blocked */
-    }
+  const openRecent = (l: RecentLink) => {
+    setMade({
+      id: l.id,
+      form: { ...EMPTY, firstName: l.firstName, business: l.business ?? '', opening: l.opening ?? '' },
+      docs: l.docs?.length ? l.docs : presetFor(l.industry as Industry),
+    })
+    window.scrollTo({ top: 0 })
   }
 
-  const reset = () => {
-    setLink('')
-    setKind('text')
-    setWithCommission(true)
+  const startNew = () => {
+    setMade(null)
+    setNotes('')
     setForm(EMPTY)
     setDocs(presetFor())
+    setDrafted(false)
   }
 
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
       <p className="text-[0.7rem] font-semibold tracking-[0.22em] text-muted-foreground uppercase">Private</p>
       <h1 className="display mt-2 text-5xl">Make a vendor <em>link</em></h1>
-      <p className="mt-3 text-muted-foreground">Fill this in after a call. The vendor gets a short private link with their name, your note, and only the documents you pick.</p>
+      <p className="mt-3 text-muted-foreground">After a meeting, talk through your notes and the AI drafts the rest. The vendor gets a private page and a message with the documents you need.</p>
 
-      {link ? (
-        <div className="mt-8 space-y-4 rounded-2xl border border-border bg-card p-5">
-          <p className="font-semibold">Link ready for {displayName(form.firstName) || 'your vendor'}</p>
-          <p className="rounded-lg bg-muted px-3 py-2.5 font-mono text-sm break-all">{link}</p>
-          <div className="grid grid-cols-2 gap-2">
-            <Button size="lg" variant="outline" className="h-11" onClick={() => copy('link')}>
-              {copied === 'link' ? <Check /> : <Copy />} Copy link
-            </Button>
-            <Button size="lg" variant="outline" className="h-11" render={<a href={link} target="_blank" rel="noopener noreferrer" />} nativeButton={false}>
-              <ExternalLink /> Preview
-            </Button>
-          </div>
-          <div>
-            <p className="mb-2 text-sm font-semibold">Message to send with it</p>
-            <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-sm font-semibold" role="tablist">
-              {([['text', 'Text message', MessageSquare], ['email', 'Email', Mail]] as const).map(([k, l, Icon]) => (
-                <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => setKind(k)}
-                  className={cn('flex items-center justify-center gap-1.5 rounded-full py-2 transition-colors', kind === k ? 'bg-card shadow-sm' : 'text-muted-foreground')}>
-                  <Icon className="size-4" /> {l}
-                </button>
-              ))}
-            </div>
-
-            {kind === 'email' && (
-              <>
-                <label className="mb-3 flex cursor-pointer items-center gap-2.5 text-sm">
-                  <input type="checkbox" checked={withCommission} onChange={e => setWithCommission(e.target.checked)} className="size-4 accent-[var(--foreground)]" />
-                  Include the commission wording
-                </label>
-                <div className="mb-2 flex items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2.5 text-sm">
-                  <span><span className="text-muted-foreground">Subject: </span>{email.subject}</span>
-                  <button type="button" onClick={() => copy('subject')} className="shrink-0 font-semibold underline decoration-ink/30 underline-offset-4">
-                    {copied === 'subject' ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
-              </>
-            )}
-
-            <p className="max-h-80 overflow-y-auto rounded-lg bg-muted px-3 py-2.5 text-sm whitespace-pre-line">{message}</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <Button size="lg" className="h-11" onClick={() => copy('message')}>
-                {copied === 'message' ? <Check /> : <Copy />} Copy {kind === 'email' ? 'email' : 'message'}
-              </Button>
-              {kind === 'email' ? (
-                <Button size="lg" variant="outline" className="h-11" render={<a href={email.mailto} />} nativeButton={false}>
-                  <Mail /> Open in email app
-                </Button>
-              ) : (
-                'share' in navigator && (
-                  <Button size="lg" variant="outline" className="h-11" onClick={() => navigator.share({ text: message }).catch(() => {})}>
-                    <Share2 /> Share
-                  </Button>
-                )
-              )}
-            </div>
-          </div>
-          <button onClick={reset} className="text-sm font-semibold underline decoration-ink/30 underline-offset-4">Make another link</button>
-        </div>
+      {made ? (
+        <Result
+          name={made.form.firstName}
+          details={{ name: made.form.firstName, business: made.form.business, opening: made.form.opening, docs: made.docs, link: `${location.origin}/v/${made.id}` }}
+          onNew={startNew}
+        />
       ) : (
-        <form onSubmit={create} className="mt-8 space-y-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className={label}>Their first name
-              <input className={field} value={form.firstName} onChange={set('firstName')} maxLength={40} required />
-            </label>
-            <label className={label}>Business name <span className="font-normal text-muted-foreground">(optional)</span>
-              <input className={field} value={form.business} onChange={set('business')} maxLength={80} />
-            </label>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className={label}>Type of business
-              <select className={field} value={form.industry} onChange={setIndustry}>
-                <option value="">Not sure</option>
-                {Object.entries(INDUSTRIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </label>
-            <label className={label}>Why they’re selling
-              <select className={field} value={form.situation} onChange={set('situation')}>
-                <option value="">Not sure</option>
-                {Object.entries(SITUATIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </label>
-          </div>
-          <label className={label}>Personal note <span className="font-normal text-muted-foreground">(optional, shown at the top)</span>
-            <textarea className={cn(field, 'min-h-28')} value={form.note} onChange={set('note')} maxLength={800}
-              placeholder="e.g. I know timing matters because you want to retire next year. Here's what other owners say…" />
-          </label>
+        <>
+          <Recent passcode={passcode} onOpen={openRecent} />
 
-          <DocPicker docs={docs} setDocs={setDocs} />
+          <form onSubmit={create} className="mt-6 space-y-5">
+            <NotesBox notes={notes} setNotes={setNotes} onDraft={draft} drafting={drafting} drafted={drafted} />
+            {draftError && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{draftError}</p>}
+            {drafted && !draftError && <p className="rounded-lg bg-gold-soft px-3 py-2 text-sm">Drafted from your notes. Check the details below and change anything that’s not right.</p>}
 
-          <label className={label}>Passcode
-            <input className={field} type="password" value={passcode} onChange={e => setPasscode(e.target.value)} required autoComplete="current-password" />
-          </label>
-          {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-          <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={busy}>
-            {busy && <Loader2 className="animate-spin" />} Make link
-          </Button>
-        </form>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className={label}>Their first name
+                <input className={field} value={form.firstName} onChange={set('firstName')} maxLength={40} required />
+              </label>
+              <label className={label}>Business name <span className="font-normal text-muted-foreground">(optional)</span>
+                <input className={field} value={form.business} onChange={set('business')} maxLength={80} />
+              </label>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <label className={label}>Type of business
+                <select className={field} value={form.industry} onChange={setIndustry}>
+                  <option value="">Not sure</option>
+                  {Object.entries(INDUSTRIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </label>
+              <label className={label}>Why they’re selling
+                <select className={field} value={form.situation} onChange={set('situation')}>
+                  <option value="">Not sure</option>
+                  {Object.entries(SITUATIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </label>
+            </div>
+            <label className={label}>Opening of your message <span className="font-normal text-muted-foreground">(after “Hi …”)</span>
+              <textarea className={cn(field, 'min-h-20')} value={form.opening} onChange={set('opening')} maxLength={500}
+                placeholder="e.g. It was lovely meeting you and your husband yesterday at your premises, Alif by Sensational Chicken." />
+            </label>
+            <label className={label}>Note at the top of their page <span className="font-normal text-muted-foreground">(optional)</span>
+              <textarea className={cn(field, 'min-h-24')} value={form.note} onChange={set('note')} maxLength={800}
+                placeholder="A short personal note they’ll see when they open the link." />
+            </label>
+
+            <DocPicker docs={docs} setDocs={setDocs} />
+
+            <label className={label}>Passcode
+              <input className={field} type="password" value={passcode} onChange={e => setPasscode(e.target.value)} required autoComplete="current-password" />
+            </label>
+            {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+            <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={busy}>
+              {busy && <Loader2 className="animate-spin" />} Make link and message
+            </Button>
+          </form>
+        </>
       )}
     </main>
-  )
-}
-
-const MAX_CUSTOM = 10
-
-function DocPicker({ docs, setDocs }: { docs: string[]; setDocs: React.Dispatch<React.SetStateAction<string[]>> }) {
-  const [custom, setCustom] = useState('')
-  const toggle = (id: string) => setDocs(d => (d.includes(id) ? d.filter(x => x !== id) : [...d, id]))
-  const customs = docs.filter(isCustom)
-
-  const addCustom = () => {
-    const text = custom.trim().replace(/\s+/g, ' ').slice(0, 80)
-    if (!text || customs.length >= MAX_CUSTOM) return
-    const id = CUSTOM_PREFIX + text
-    setDocs(d => (d.includes(id) ? d : [...d, id]))
-    setCustom('')
-  }
-
-  const groups = Object.entries(GROUPS).filter(([g]) => g !== 'other') as [DocGroup, string][]
-
-  return (
-    <fieldset className="rounded-2xl border border-border bg-card">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-4 py-3">
-        <legend className="contents">
-          <span className="text-sm font-semibold">Documents to ask for</span>
-        </legend>
-        <span className="text-sm text-muted-foreground">{docs.length} selected</span>
-        <div className="flex w-full gap-3 text-sm font-semibold">
-          <button type="button" onClick={() => setDocs([...DOCUMENTS.map(d => d.id), ...customs])} className="underline decoration-ink/30 underline-offset-4">Select all</button>
-          <button type="button" onClick={() => setDocs([])} className="underline decoration-ink/30 underline-offset-4">Clear</button>
-        </div>
-      </div>
-
-      {groups.map(([g, name]) => (
-        <div key={g} className="border-b border-border px-4 py-3">
-          <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">{name}</p>
-          <div className="flex flex-wrap gap-2">
-            {DOCUMENTS.filter(d => d.group === g).map(d => {
-              const on = docs.includes(d.id)
-              return (
-                <button
-                  key={d.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggle(d.id)}
-                  className={cn(
-                    'flex items-center gap-1.5 rounded-full border-[1.5px] px-3 py-1.5 text-left text-sm transition-colors',
-                    on ? 'border-ink bg-ink text-background' : 'border-ink/15 hover:border-ink/40',
-                  )}
-                >
-                  {on && <Check className="size-3.5 shrink-0" strokeWidth={3} />}
-                  {d.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-
-      <div className="px-4 py-3">
-        <p className="mb-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Anything else</p>
-        {customs.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {customs.map(id => (
-              <span key={id} className="flex items-center gap-1 rounded-full border-[1.5px] border-ink bg-ink py-1.5 pr-1.5 pl-3 text-sm text-background">
-                {id.slice(CUSTOM_PREFIX.length)}
-                <button type="button" aria-label="Remove" onClick={() => toggle(id)} className="rounded-full p-0.5 hover:bg-white/20">
-                  <X className="size-3.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="flex gap-2">
-          <input
-            className={cn(field, 'mt-0 py-2.5')}
-            value={custom}
-            onChange={e => setCustom(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustom() } }}
-            placeholder="e.g. Kitchen equipment service records"
-            maxLength={80}
-            disabled={customs.length >= MAX_CUSTOM}
-          />
-          <Button type="button" variant="outline" className="h-auto px-4" onClick={addCustom} disabled={!custom.trim()}>
-            <Plus /> Add
-          </Button>
-        </div>
-      </div>
-    </fieldset>
   )
 }

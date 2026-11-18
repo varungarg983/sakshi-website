@@ -1,21 +1,14 @@
 import { getStore } from '@netlify/blobs';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
+import { DOC_ID_RE, INDUSTRIES, SITUATIONS, json, passcodeOk, text } from '../vendor-shared.mjs';
 
-// Personal vendor links: Sakshi makes one after a call, the vendor opens /v/<id>
-const INDUSTRIES = ['cafe', 'hospitality', 'cleaning', 'retail', 'service', 'other'];
-const SITUATIONS = ['retiring', 'moving-on', 'health', 'relocating', 'first-sale'];
+// Personal vendor links: Sakshi makes one after a meeting, the vendor opens /v/<id>
 const ID_RE = /^[A-Za-z0-9]{6,20}$/;
-const DOC_ID_RE = /^[a-z][a-z-]{1,40}$/;
 const CUSTOM_PREFIX = 'custom:';
 const ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-const json = (status, body) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' },
-  });
-
-const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+// List of Sakshi's recent links. The underscore means a vendor link id can never match it.
+const INDEX_KEY = '_recent';
+const INDEX_LIMIT = 100;
 
 // Library documents are short ids; Sakshi's own ones are "custom:<text>"
 function cleanDocs(list) {
@@ -25,8 +18,8 @@ function cleanDocs(list) {
   for (const item of list.slice(0, 60)) {
     if (typeof item !== 'string') continue;
     if (item.startsWith(CUSTOM_PREFIX)) {
-      const text = item.slice(CUSTOM_PREFIX.length).replace(/\s+/g, ' ').trim().slice(0, 80);
-      if (text && custom < 10) { out.push(CUSTOM_PREFIX + text); custom++; }
+      const t = item.slice(CUSTOM_PREFIX.length).replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (t && custom < 10) { out.push(CUSTOM_PREFIX + t); custom++; }
     } else if (DOC_ID_RE.test(item)) {
       out.push(item);
     }
@@ -38,17 +31,19 @@ function newId() {
   return [...randomBytes(10)].map(b => ALPHABET[b % ALPHABET.length]).join('');
 }
 
-function passcodeOk(given) {
-  const expected = process.env.VENDOR_LINK_PASSCODE;
-  if (!expected || typeof given !== 'string') return false;
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
+async function loadIndex(store) {
+  try {
+    const list = await store.get(INDEX_KEY, { type: 'json' });
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
 }
 
 export default async (req) => {
   const store = getStore('vendor-links');
 
+  // What the vendor's page loads. The message opening is Sakshi's, so it isn't sent here.
   if (req.method === 'GET') {
     const id = new URL(req.url).searchParams.get('id') || '';
     if (!ID_RE.test(id)) return json(400, { error: 'Invalid link' });
@@ -75,6 +70,11 @@ export default async (req) => {
   if (!process.env.VENDOR_LINK_PASSCODE) return json(500, { error: 'Link maker is not set up yet (no passcode in Netlify).' });
   if (!passcodeOk(body.passcode)) return json(401, { error: 'That passcode is not right.' });
 
+  // Sakshi's recent links, newest first
+  if (body.action === 'recent') {
+    return json(200, { links: (await loadIndex(store)).slice(0, 50) });
+  }
+
   const firstName = text(body.firstName, 40);
   if (!firstName) return json(400, { error: 'Please add their first name.' });
 
@@ -84,6 +84,7 @@ export default async (req) => {
     industry: INDUSTRIES.includes(body.industry) ? body.industry : undefined,
     situation: SITUATIONS.includes(body.situation) ? body.situation : undefined,
     note: text(body.note, 800),
+    opening: text(body.opening, 500),
     docs: cleanDocs(body.docs),
     created: new Date().toISOString(),
   };
@@ -91,6 +92,14 @@ export default async (req) => {
   try {
     const id = newId();
     await store.setJSON(id, vendor);
+    // The recent list is a bonus: if it can't be updated, the link still works
+    try {
+      const index = await loadIndex(store);
+      index.unshift({ id, ...vendor });
+      await store.setJSON(INDEX_KEY, index.slice(0, INDEX_LIMIT));
+    } catch (err) {
+      console.error('Could not update recent links:', err.message);
+    }
     return json(200, { id });
   } catch (err) {
     console.error('Could not save vendor link:', err.message);

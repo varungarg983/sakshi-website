@@ -6,6 +6,14 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Link maker — voice notes, AI drafting and recent links
+- Notes box with a Speak button (browser speech-to-text, NZ English): Sakshi talks or types her rough notes about the meeting
+- "Draft with AI" sends the notes to the NVIDIA model (same key as the review page, new `vendor-draft` function, passcode-protected) and fills in name, business, type, reason for selling, extra documents (e.g. franchise, liquor licence), the message opening and the page note; everything stays editable
+- Checks stop the AI writing about the owner in the third person or adding people the notes don't mention; it never writes the document list or commission wording
+- Message now follows the one Sakshi actually sends (opening, link paragraph, documents "as soon as possible", commission, sign-off), with Text, WhatsApp (bold headings) and Email versions, editable before copying
+- Recent links list (stored with the links in Netlify Blobs) to reopen any vendor and copy the message again; links made before this change aren't in the list
+- Shared passcode and validation helpers in `netlify/vendor-shared.mjs`
+
 ### Vendor page — self-contained messages
 - Text message now includes the full document list and the commission wording, so it works even if the vendor never opens the link
 - Email includes the commission wording by default (can still be unticked); both say everything is written out in case the link doesn't open
