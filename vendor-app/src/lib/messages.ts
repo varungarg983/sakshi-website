@@ -11,16 +11,38 @@ export function displayName(raw?: string) {
 
 type Details = { name?: string; business?: string; link: string; docs: string[] }
 
-// Short version for a text or WhatsApp message
-export function textMessage({ name, link }: Details) {
+// The chosen documents as a grouped, bulleted list
+function docList(docs: string[]): string[] {
+  const list: string[] = []
+  const picked = resolveDocs(docs)
+  for (const [group, label] of Object.entries(GROUPS)) {
+    const inGroup = picked.filter(d => d.group === group)
+    if (!inGroup.length) continue
+    list.push(label)
+    for (const d of inGroup) list.push(`• ${d.label}`)
+    list.push('')
+  }
+  return list
+}
+
+const commission = (): string[] => [COMMISSION_TITLE, '', ...COMMISSION_TERMS.flatMap(p => [p, ''])]
+
+// For a text or WhatsApp message. Complete on its own, so it works even if the link isn't opened.
+export function textMessage({ name, business, link, docs }: Details) {
   const who = displayName(name) || 'there'
+  const biz = business?.trim()
+  const list = docList(docs)
   return [
-    `Hi ${who}, thanks for your time on the phone today.`,
+    `Hi ${who}, thanks for your time on the phone today${biz ? ` about ${biz}` : ''}.`,
     '',
-    `As promised, here's a page I've put together for you: ${link}`,
+    `As promised, here's a page I've put together for you, with reviews from other owners I've worked with and how I keep your sale confidential: ${link}`,
     '',
-    `It has reviews from other business owners I've worked with, how I keep your sale confidential, how my fee works, and the documents I'll need. No rush, send them through whenever you're ready.`,
+    `Everything you need is also written below, in case the link doesn't open.`,
     '',
+    ...(list.length ? [`When you're ready, these are the documents I'll need:`, '', ...list] : []),
+    `Photos, screenshots or PDFs are all fine. No rush, send them through whenever you're ready.`,
+    '',
+    ...commission(),
     `Any questions, just call or text me on ${CONTACT.phoneDisplay}.`,
     '',
     CONTACT.firstName,
@@ -32,16 +54,7 @@ export function emailMessage({ name, business, link, docs }: Details, withCommis
   const who = displayName(name)
   const biz = business?.trim()
   const subject = `Great talking today${who ? `, ${who}` : ''}: next steps for ${biz || 'your business'}`
-
-  const list: string[] = []
-  const picked = resolveDocs(docs)
-  for (const [group, label] of Object.entries(GROUPS)) {
-    const inGroup = picked.filter(d => d.group === group)
-    if (!inGroup.length) continue
-    list.push(label)
-    for (const d of inGroup) list.push(`• ${d.label}`)
-    list.push('')
-  }
+  const list = docList(docs)
 
   const body = [
     `Hi ${who || 'there'},`,
@@ -55,10 +68,12 @@ export function emailMessage({ name, business, link, docs }: Details, withCommis
     '• how my fee works',
     '• the documents I’ll need, with a button that writes the email for you',
     '',
+    `In case the link doesn't open, everything you need is also written below.`,
+    '',
     ...(list.length ? [`When you're ready, these are the documents I'll need:`, '', ...list] : []),
     `Photos, screenshots or PDFs are all fine, and you can send them over a few emails if that's easier. There's no rush.`,
     '',
-    ...(withCommission ? [`${COMMISSION_TITLE}`, '', ...COMMISSION_TERMS.flatMap(p => [p, '']) ] : []),
+    ...(withCommission ? commission() : []),
     `Everything you share with me stays confidential. If you have any questions at all, call or text me on ${CONTACT.phoneDisplay}, or just reply to this email.`,
     '',
     'Kind regards,',

@@ -22,7 +22,7 @@ export function LinkMaker() {
   const [link, setLink] = useState('')
   const [copied, setCopied] = useState<'link' | 'message' | 'subject' | ''>('')
   const [kind, setKind] = useState<'text' | 'email'>('text')
-  const [withCommission, setWithCommission] = useState(false)
+  const [withCommission, setWithCommission] = useState(true)
 
   const set = (k: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -77,7 +77,7 @@ export function LinkMaker() {
   const reset = () => {
     setLink('')
     setKind('text')
-    setWithCommission(false)
+    setWithCommission(true)
     setForm(EMPTY)
     setDocs(presetFor())
   }

@@ -6,6 +6,10 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Vendor page — self-contained messages
+- Text message now includes the full document list and the commission wording, so it works even if the vendor never opens the link
+- Email includes the commission wording by default (can still be unticked); both say everything is written out in case the link doesn't open
+
 ### Vendor page — follow-up messages and commission wording
 - Link maker now writes two ready-to-copy messages: a text message, and a detailed email with subject line, the exact documents picked, and Sakshi's signature
 - Email can optionally include Clyth MacLeod's commission wording word for word; "Open in email app" starts a draft
