@@ -4,6 +4,16 @@ A running log of all changes made to the website.
 
 ---
 
+## 2026-11-18
+
+### Vendor follow-up page (new, React)
+- New page at `/vendor` to send sellers after a first call, built with React, Vite, Tailwind and shadcn/ui in `vendor-app/` (Netlify builds it automatically)
+- Personal greeting and note from Sakshi, with reviews from owners in the same industry or situation shown first; filters, "show more" and a link to Google reviews
+- Sections on confidentiality, recent sales, honest promises, Sakshi's journey (animated timeline) and licence details
+- Document checklist that writes the email for the vendor: ticked items show as "attached", the rest as "I'll send this soon"; also opens in Gmail or copies the list
+- Private link maker at `/vendor/#/make` (needs `VENDOR_LINK_PASSCODE` set in Netlify) creates short links like `/v/abc123`, stored with Netlify Blobs
+- Reviews, journey, deal stories and the document list are edited in `vendor-app/src/data/`
+
 ## 2026-11-17
 
 ### Review Page — Rough notes and voice input

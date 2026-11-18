@@ -1,5 +1,10 @@
 [build]
   publish = "."
+  # Builds the React vendor page (vendor-app/) into /vendor
+  command = "npm --prefix vendor-app ci && npm --prefix vendor-app run build"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 [functions]
   directory = "netlify/functions"
@@ -9,3 +14,19 @@
   [headers.values]
     Content-Security-Policy = "upgrade-insecure-requests; block-all-mixed-content"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+# Short personal links for vendors: /v/<id> shows the vendor page
+[[redirects]]
+  from = "/v/*"
+  to = "/vendor/index.html"
+  status = 200
+
+[[headers]]
+  for = "/vendor/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/v/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
