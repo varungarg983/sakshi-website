@@ -2,7 +2,7 @@ import { motion, useScroll, useSpring, useTransform, type MotionValue } from 'mo
 import { ArrowUpRight } from 'lucide-react'
 import { useRef } from 'react'
 import { Label, Photo, Portrait, Reveal } from '@/components/common'
-import { CONFIDENTIALITY, CONTACT, DEAL_STORIES, HONEST_PROMISES, JOURNEY, LANGUAGES } from '@/data/content'
+import { CONFIDENTIALITY, CONTACT, HONEST_PROMISES, JOURNEY, LANGUAGES } from '@/data/content'
 
 // Deep panel that opens out to full width as it scrolls in
 export function Confidential() {
@@ -38,39 +38,6 @@ export function Confidential() {
         </div>
       </motion.div>
     </div>
-  )
-}
-
-export function Stories() {
-  return (
-    <section className="mx-auto max-w-5xl px-4 py-24 sm:py-32">
-      <Reveal>
-        <Label>Recent results</Label>
-        <h2 className="display mt-5 max-w-2xl text-5xl text-balance sm:text-7xl">
-          A couple of <em>recent sales.</em>
-        </h2>
-        <p className="mt-5 text-lg text-muted-foreground">Names left out, for the same reason I’d keep yours out.</p>
-      </Reveal>
-      <div className="mt-14 grid gap-12 sm:grid-cols-2 sm:gap-10">
-        {DEAL_STORIES.map((d, i) => (
-          <Reveal key={d.business} delay={i * 0.1}>
-            <article className="border-t border-ink/20 pt-6">
-              <p className="display text-[5.5rem] sm:text-[7rem]">{d.stat}</p>
-              <h3 className="mt-4 text-lg font-semibold">{d.business}</h3>
-              <p className="mt-2 leading-relaxed text-muted-foreground">{d.worry} {d.result}</p>
-            </article>
-          </Reveal>
-        ))}
-      </div>
-      <Reveal className="mt-16">
-        <figure>
-          <div className="aspect-[4/3] overflow-hidden rounded-[28px] sm:aspect-[21/9]">
-            <Photo name="meeting-room" alt="Sakshi in a meeting around a table" className="object-[60%_center]" />
-          </div>
-          <figcaption className="mt-3 text-sm text-muted-foreground">At the Clyth McLeod office.</figcaption>
-        </figure>
-      </Reveal>
-    </section>
   )
 }
 

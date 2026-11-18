@@ -6,6 +6,15 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Vendor page — fee calculator
+- New "How my fee works" section: vendor types a sale price or uses the slider and sees the commission broken down ($800 upfront, 8% of the first $1m, 6% above, minimum $18,750 on those parts), plus GST
+- Fee rules live in `FEES` in `vendor-app/src/data/content.ts`
+
+### Vendor page — fewer numbers, new portrait
+- Removed review numbering ("2 / 5", "Show all 11 reviews") so no numbers are put in vendors' minds
+- Removed the "recent sales" section and the "café sold in one week" claim; Sumit's large quote now uses a sentence without a timeframe (his full review is unchanged)
+- New portrait and closing photo from Sakshi's headshot; removed the bar and meeting-room photos
+
 ### Vendor page — editorial redesign
 - Redesigned to feel less templated, inspired by wisprflow.ai: cream background, EB Garamond headings with italic emphasis, Figtree body text
 - Hero ribbon with real review quotes drifting along a curve, and a scrolling strip of proof points

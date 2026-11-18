@@ -23,7 +23,7 @@ export type Review = {
 export const REVIEWS: Review[] = [
   {
     name: 'Sumit G.',
-    pull: 'She found a buyer in just the first week after taking over from another agent.',
+    pull: 'Her clear and responsive communication made a huge difference, and I loved how she moved everything forward at a great pace.',
     role: 'seller',
     industry: 'other',
     rating: 5,

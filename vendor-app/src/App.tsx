@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { LinkMaker } from './LinkMaker'
 import { Hero, TopBar } from './sections/Hero'
 import { Reviews } from './sections/Reviews'
-import { Confidential, Credentials, Honest, Journey, Stories } from './sections/Trust'
+import { Confidential, Credentials, Honest, Journey } from './sections/Trust'
 import { Contact, Documents, StickyBar } from './sections/Documents'
+import { Fees } from './sections/Fees'
 import { linkId, loadVendor, type Vendor } from './lib/vendor'
 
 export default function App() {
@@ -42,10 +43,10 @@ function VendorPage() {
       <main>
         <Reviews vendor={vendor} />
         <Confidential />
-        <Stories />
         <Honest />
         <Journey />
         <Credentials />
+        <Fees />
         <Documents vendor={vendor} id={id} />
       </main>
       <Contact vendor={vendor} />

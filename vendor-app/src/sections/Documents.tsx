@@ -122,7 +122,7 @@ export function Contact({ vendor }: { vendor: Vendor | null }) {
         <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 pt-16 pb-16 sm:pt-24 md:grid-cols-[0.8fr_1fr] md:gap-14">
           <Reveal>
             <div className="aspect-[4/5] overflow-hidden rounded-[22px]">
-              <Photo name="networking" alt="Sakshi chatting with someone at an event" className="object-[40%_center]" />
+              <Photo name="headshot" alt="Sakshi Aggarwal smiling" className="object-[50%_30%]" />
             </div>
           </Reveal>
           <Reveal delay={0.1}>

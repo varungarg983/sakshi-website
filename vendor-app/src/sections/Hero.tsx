@@ -38,7 +38,6 @@ export function Hero({ vendor }: { vendor: Vendor | null }) {
   const allFive = REVIEWS.length > 0 && REVIEWS.every(r => r.rating === 5)
 
   const proof = [
-    'Café sold in one week',
     'Businesses sold before listing',
     allFive ? 'Five-star Google reviews' : 'Real Google reviews',
     `Speaks ${LANGUAGES.join(', ')}`,

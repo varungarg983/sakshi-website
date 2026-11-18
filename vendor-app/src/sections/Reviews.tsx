@@ -98,7 +98,7 @@ function ReviewStory({ story, vendor }: { story: Review[]; vendor: Vendor | null
           <div className="relative flex min-h-[460px] flex-col overflow-hidden rounded-[28px] bg-navy p-7 text-white sm:min-h-[520px] sm:p-12">
             <div className="flex gap-1.5 md:hidden">
               {story.map((_, i) => (
-                <button key={i} onClick={() => jump(i)} aria-label={`Review ${i + 1}`} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
+                <button key={i} onClick={() => jump(i)} aria-label="Show this review" className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
                   <span className={cn('block h-full bg-accent transition-all duration-500', i <= active ? 'w-full' : 'w-0')} />
                 </button>
               ))}
@@ -126,7 +126,6 @@ function ReviewStory({ story, vendor }: { story: Review[]; vendor: Vendor | null
                     <span className="block text-base font-semibold">{r.name}</span>
                     <span className="text-white/60">{describe(r)}</span>
                   </span>
-                  <span className="font-heading text-lg text-white/50 italic">{active + 1} / {story.length}</span>
                 </figcaption>
               </motion.figure>
             </AnimatePresence>
@@ -175,7 +174,7 @@ function AllReviews({ reviews }: { reviews: Review[] }) {
           </div>
           {reviews.length > shown && (
             <button onClick={() => setShown(reviews.length)} className={cn(btn.base, btn.ghost, 'w-full')}>
-              Show all {reviews.length} reviews
+              Show all reviews
             </button>
           )}
         </>

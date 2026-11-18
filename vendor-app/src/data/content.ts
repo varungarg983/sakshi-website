@@ -41,24 +41,6 @@ export const SITUATIONS = {
 } as const
 export type Situation = keyof typeof SITUATIONS
 
-// Short deal stories with no names. Only real results.
-export const DEAL_STORIES = [
-  {
-    business: 'Cleaning business',
-    worry: 'The owner wanted a quiet sale without clients or staff hearing about it.',
-    result: 'Sold before it was ever listed publicly, to a buyer from my own buyer pool.',
-    highlight: 'Sold before listing',
-    stat: 'Off-market',
-  },
-  {
-    business: 'Café',
-    worry: 'The owner was worried it would sit on the market for months.',
-    result: 'Sold within one week of marketing starting.',
-    highlight: 'Sold in one week',
-    stat: '1 week',
-  },
-]
-
 export const CONFIDENTIALITY = [
   {
     title: 'Buyers sign first',
@@ -126,4 +108,34 @@ export const DOCUMENTS_BY_INDUSTRY: Partial<Record<Industry, string[]>> = {
   cleaning: ['List of regular contracts (no client names needed)', 'Vehicles used by the business'],
   retail: ['Rough value of current stock', 'Any supplier or franchise agreements'],
   service: ['List of regular contracts (no client names needed)'],
+}
+
+// Clyth McLeod commission, all amounts excluding GST. Update here if the agency's fees change.
+export const FEES = {
+  upfront: 800, // AML/CFT compliance, admin and marketing; paid on signing, non-refundable
+  firstRate: 0.08, // on the first $1,000,000 of the sale price
+  firstBand: 1_000_000,
+  secondRate: 0.06, // on the sale price above $1,000,000
+  minimumSuccessFee: 18_750, // minimum for the 8% and 6% parts combined
+  gst: 0.15,
+}
+
+export type FeeBreakdown = {
+  first: number
+  second: number
+  minimumApplied: boolean
+  successFee: number
+  totalExGst: number
+  gst: number
+  totalIncGst: number
+}
+
+export function calculateFee(price: number): FeeBreakdown {
+  const first = FEES.firstRate * Math.min(price, FEES.firstBand)
+  const second = FEES.secondRate * Math.max(0, price - FEES.firstBand)
+  const minimumApplied = first + second < FEES.minimumSuccessFee
+  const successFee = Math.max(first + second, FEES.minimumSuccessFee)
+  const totalExGst = FEES.upfront + successFee
+  const gst = totalExGst * FEES.gst
+  return { first, second, minimumApplied, successFee, totalExGst, gst, totalIncGst: totalExGst + gst }
 }
