@@ -6,6 +6,13 @@ A running log of all changes made to the website.
 
 ## 2026-11-18
 
+### Vendor page — pick documents per vendor
+- Link maker now has a document picker: choosing the type of business pre-ticks the usual documents, then Sakshi can tick or untick any, select all or clear, and add her own custom items
+- Document library (financials, staff and wages, premises, equipment and stock, licences and agreements) with a short tip for each, in `vendor-app/src/data/documents.ts`
+- Chosen documents are saved with the link; the vendor page and the pre-written email show only those, grouped by section
+- Sending tips for vendors (photos and PDFs are fine, send large sets over a few emails)
+- Fixed quick taps on the checklist not all registering
+
 ### Vendor page — fee calculator
 - New "How my fee works" section: vendor types a sale price or uses the slider and sees the commission broken down ($800 upfront, 8% of the first $1m, 6% above, minimum $18,750 on those parts), plus GST
 - Fee rules live in `FEES` in `vendor-app/src/data/content.ts`

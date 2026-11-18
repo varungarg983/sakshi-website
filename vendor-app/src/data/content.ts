@@ -93,23 +93,6 @@ export const JOURNEY: { year?: string; title: string; text: string }[] = [
 
 export const LANGUAGES = ['English', 'Hindi', 'Punjabi']
 
-// Documents to ask for. Sakshi can change this list at any time.
-export const DOCUMENTS_BASE = [
-  'Last 2 years of financial statements',
-  'This year’s profit and loss so far',
-  'Current lease agreement',
-  'List of equipment and fit-out',
-  'Staff roles and hours (no names needed)',
-]
-
-export const DOCUMENTS_BY_INDUSTRY: Partial<Record<Industry, string[]>> = {
-  cafe: ['Food control plan or registration', 'Alcohol licence (if you have one)'],
-  hospitality: ['Food control plan or registration', 'Alcohol licence (if you have one)'],
-  cleaning: ['List of regular contracts (no client names needed)', 'Vehicles used by the business'],
-  retail: ['Rough value of current stock', 'Any supplier or franchise agreements'],
-  service: ['List of regular contracts (no client names needed)'],
-}
-
 // Clyth McLeod commission, all amounts excluding GST. Update here if the agency's fees change.
 export const FEES = {
   upfront: 800, // AML/CFT compliance, admin and marketing; paid on signing, non-refundable

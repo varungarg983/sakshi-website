@@ -2,29 +2,33 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Check, Copy, Mail, MessageCircle, Paperclip, Phone } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Label, Photo, Reveal, btn } from '@/components/common'
-import { CONTACT, DOCUMENTS_BASE, DOCUMENTS_BY_INDUSTRY } from '@/data/content'
+import { CONTACT } from '@/data/content'
+import { GROUPS, presetFor, resolveDocs, type DocGroup } from '@/data/documents'
 import { buildEmail } from '@/lib/email'
 import { store, type Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
 export function Documents({ vendor, id }: { vendor: Vendor | null; id: string | null }) {
-  const items = useMemo(
-    () => [...DOCUMENTS_BASE, ...((vendor?.industry && DOCUMENTS_BY_INDUSTRY[vendor.industry]) || [])],
-    [vendor],
-  )
-  const key = `vendor-docs-${id ?? 'general'}`
+  // The documents Sakshi picked for this vendor, or the usual set for their type of business
+  const items = useMemo(() => resolveDocs(vendor?.docs?.length ? vendor.docs : presetFor(vendor?.industry)), [vendor])
+  const groups = (Object.entries(GROUPS) as [DocGroup, string][])
+    .map(([g, name]) => ({ name, docs: items.filter(d => d.group === g) }))
+    .filter(g => g.docs.length)
+  const key = `vendor-docs-v2-${id ?? 'general'}`
   const [ticked, setTicked] = useState<Set<string>>(() => new Set(store.get<string[]>(key, [])))
   const [copied, setCopied] = useState(false)
 
-  const toggle = (item: string) => {
-    const next = new Set(ticked)
-    if (next.has(item)) next.delete(item)
-    else next.add(item)
-    setTicked(next)
-    store.set(key, [...next])
-  }
+  // Works from the latest state, so quick taps in a row all register
+  const toggle = (item: string) =>
+    setTicked(prev => {
+      const next = new Set(prev)
+      if (next.has(item)) next.delete(item)
+      else next.add(item)
+      store.set(key, [...next])
+      return next
+    })
 
-  const done = items.filter(i => ticked.has(i)).length
+  const done = items.filter(d => ticked.has(d.id)).length
   const email = buildEmail(vendor ?? {}, items, ticked)
 
   const copy = async () => {
@@ -67,35 +71,46 @@ export function Documents({ vendor, id }: { vendor: Vendor | null; id: string | 
             <motion.div className="h-full rounded-full bg-ink" animate={{ width: `${(done / items.length) * 100}%` }} transition={{ type: 'spring', stiffness: 140, damping: 22 }} />
           </div>
 
-          <ul className="mt-4">
-            {items.map(item => {
-              const on = ticked.has(item)
-              return (
-                <li key={item} className="border-t border-border">
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={on}
-                    onClick={() => toggle(item)}
-                    className="flex w-full items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-muted/60"
-                  >
-                    <span className={cn('grid size-6 shrink-0 place-items-center rounded-full border-[1.5px] transition-all', on ? 'border-ink bg-ink text-background' : 'border-ink/30')}>
-                      <motion.span initial={false} animate={{ scale: on ? 1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 28 }}>
-                        <Check className="size-3.5" strokeWidth={3} />
-                      </motion.span>
-                    </span>
-                    <span className={cn('leading-snug transition-colors', on && 'text-muted-foreground')}>{item}</span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+          <div className="mt-4">
+            {groups.map(g => (
+              <div key={g.name}>
+                <p className="border-t border-border bg-muted/40 px-6 py-2 text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">{g.name}</p>
+                <ul>
+                  {g.docs.map(d => {
+                    const on = ticked.has(d.id)
+                    return (
+                      <li key={d.id} className="border-t border-border">
+                        <button
+                          type="button"
+                          role="checkbox"
+                          aria-checked={on}
+                          onClick={() => toggle(d.id)}
+                          className="flex w-full items-start gap-4 px-6 py-4 text-left transition-colors hover:bg-muted/60"
+                        >
+                          <span className={cn('mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border-[1.5px] transition-all', on ? 'border-ink bg-ink text-background' : 'border-ink/30')}>
+                            <motion.span initial={false} animate={{ scale: on ? 1 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 28 }}>
+                              <Check className="size-3.5" strokeWidth={3} />
+                            </motion.span>
+                          </span>
+                          <span>
+                            <span className={cn('block leading-snug transition-colors', on && 'text-muted-foreground')}>{d.label}</span>
+                            {d.hint && <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">{d.hint}</span>}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
 
           <div className="space-y-3 border-t border-border bg-muted/50 p-6">
-            <p className="flex gap-2 text-sm text-muted-foreground">
-              <Paperclip className="mt-0.5 size-4 shrink-0" />
-              Your email app opens with everything written. Just attach the files you’ve ticked and press send.
-            </p>
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              <li className="flex gap-2"><Paperclip className="mt-0.5 size-4 shrink-0" />Your email opens with the list written for you. Just attach the files you’ve ticked and press send.</li>
+              <li className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0" />PDFs, screenshots and phone photos are all fine. No need to scan anything.</li>
+              <li className="flex gap-2"><Mail className="mt-0.5 size-4 shrink-0" />Lots of files? Send them over a few emails. Each one will show what’s still to come.</li>
+            </ul>
             <a href={email.mailto} className={cn(btn.base, btn.accent, 'w-full')}>
               <Mail /> Email {CONTACT.firstName} my documents
             </a>

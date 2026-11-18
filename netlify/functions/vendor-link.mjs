@@ -5,6 +5,8 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 const INDUSTRIES = ['cafe', 'hospitality', 'cleaning', 'retail', 'service', 'other'];
 const SITUATIONS = ['retiring', 'moving-on', 'health', 'relocating', 'first-sale'];
 const ID_RE = /^[A-Za-z0-9]{6,20}$/;
+const DOC_ID_RE = /^[a-z][a-z-]{1,40}$/;
+const CUSTOM_PREFIX = 'custom:';
 const ALPHABET = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 const json = (status, body) =>
@@ -14,6 +16,23 @@ const json = (status, body) =>
   });
 
 const text = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+// Library documents are short ids; Sakshi's own ones are "custom:<text>"
+function cleanDocs(list) {
+  if (!Array.isArray(list)) return undefined;
+  const out = [];
+  let custom = 0;
+  for (const item of list.slice(0, 60)) {
+    if (typeof item !== 'string') continue;
+    if (item.startsWith(CUSTOM_PREFIX)) {
+      const text = item.slice(CUSTOM_PREFIX.length).replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (text && custom < 10) { out.push(CUSTOM_PREFIX + text); custom++; }
+    } else if (DOC_ID_RE.test(item)) {
+      out.push(item);
+    }
+  }
+  return [...new Set(out)];
+}
 
 function newId() {
   return [...randomBytes(10)].map(b => ALPHABET[b % ALPHABET.length]).join('');
@@ -36,8 +55,8 @@ export default async (req) => {
     try {
       const vendor = await store.get(id, { type: 'json' });
       if (!vendor) return json(404, { error: 'Link not found' });
-      const { firstName, business, industry, situation, note } = vendor;
-      return json(200, { firstName, business, industry, situation, note });
+      const { firstName, business, industry, situation, note, docs } = vendor;
+      return json(200, { firstName, business, industry, situation, note, docs });
     } catch (err) {
       console.error('Could not load vendor link:', err.message);
       return json(500, { error: 'Could not load' });
@@ -65,6 +84,7 @@ export default async (req) => {
     industry: INDUSTRIES.includes(body.industry) ? body.industry : undefined,
     situation: SITUATIONS.includes(body.situation) ? body.situation : undefined,
     note: text(body.note, 800),
+    docs: cleanDocs(body.docs),
     created: new Date().toISOString(),
   };
 

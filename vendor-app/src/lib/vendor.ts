@@ -6,6 +6,8 @@ export type Vendor = {
   industry?: Industry
   situation?: Situation
   note?: string
+  // Documents Sakshi picked for this vendor (ids from documents.ts, or "custom:<text>")
+  docs?: string[]
 }
 
 export const API = '/.netlify/functions/vendor-link'
