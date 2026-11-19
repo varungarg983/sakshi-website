@@ -58,7 +58,8 @@ export function Reviews({ vendor }: { vendor: Vendor | null }) {
   )
 }
 
-// Cards in different colours slide in from the right as you scroll, tilting as they pass
+// Cards in different colours travel along a curved 3D path as you scroll (the same motion as wisprflow.ai):
+// each one rises from the lower right, sits flat in the middle, then tips back and leaves to the upper left
 const LOOKS = [
   { card: 'bg-navy text-white', sub: 'text-white/60', star: 'text-accent' },
   { card: 'bg-accent text-ink', sub: 'text-ink/60', star: 'text-gold' },
@@ -66,6 +67,9 @@ const LOOKS = [
   { card: 'bg-gold-soft text-ink', sub: 'text-ink/60', star: 'text-gold' },
   { card: 'bg-ink text-background', sub: 'text-background/60', star: 'text-accent' },
 ]
+// Wide and square cards, in the same rhythm as Wispr's
+const WIDE = [true, false, false, true, false]
+const MAX_TILT = 50
 
 function useViewportWidth() {
   const [vw, setVw] = useState(() => window.innerWidth)
@@ -82,24 +86,24 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
   const reduce = useReducedMotion()
   const vw = useViewportWidth()
   const small = vw < 640
-  // Each card fills the screen when it reaches the middle
-  const cardW = small ? vw - 32 : Math.min(vw - 160, 1100)
-  const gap = small ? 24 : 80
-  const step = cardW + gap
-  const trackW = reviews.length * step - gap
-  // The first card starts part-way in from the right; the strip ends with the last card in view
-  const startX = vw * 0.55
-  const endX = (vw - cardW) / 2 - (trackW - cardW)
+
+  // Sizes taken from Wispr: 416 × 460 and 740 × 460 on desktop, screen width less 52px on phones
+  const widths = reviews.map((_, i) => (small ? vw - 52 : WIDE[i % WIDE.length] ? Math.min(740, vw - 48) : 416))
+  const gap = small ? 108 : 140
+  const centres: number[] = []
+  widths.forEach((w, i) => centres.push(i === 0 ? 0 : centres[i - 1] + widths[i - 1] / 2 + gap + w / 2))
+  const distance = centres[centres.length - 1] ?? 0
+  const path = small ? { radius: 220, reach: 360, perspective: 840 } : { radius: 480, reach: 800, perspective: 1900 }
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  const x = useTransform(scrollYProgress, [0.03, 0.97], [startX, endX])
+  const travelled = useTransform(scrollYProgress, [0, 1], [0, distance])
 
   if (reduce) {
     return (
       <div className="flex snap-x gap-5 overflow-x-auto px-4 py-16">
         {reviews.map((r, i) => (
           <div key={r.name} className="snap-start">
-            <CardBody r={r} i={i} width={cardW} match={isMatch(r, vendor)} />
+            <CardBody r={r} i={i} width={widths[i]} small={small} match={isMatch(r, vendor)} />
           </div>
         ))}
       </div>
@@ -107,68 +111,79 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
   }
 
   return (
-    <div ref={ref} style={{ height: `${Math.round(reviews.length * 100 + 40)}vh` }} className="relative">
-      <div className="sticky top-0 flex h-dvh items-center overflow-hidden">
-        <motion.div style={{ x, width: trackW }} className="relative flex shrink-0 items-center" aria-label="Reviews">
-          {reviews.map((r, i) => (
-            <SlideCard key={r.name} r={r} i={i} x={x} left={i * step} cardW={cardW} gap={gap} vw={vw} small={small} match={isMatch(r, vendor)} />
-          ))}
-        </motion.div>
+    // Cards move about one pixel for each pixel scrolled, as on Wispr
+    <div ref={ref} style={{ height: `calc(100dvh + ${Math.round(distance)}px)` }} className="relative">
+      <div className="sticky top-0 h-dvh overflow-hidden" style={{ perspective: path.perspective }} aria-label="Reviews">
+        {reviews.map((r, i) => (
+          <PathCard key={r.name} centre={centres[i]} travelled={travelled} path={path}>
+            <CardBody r={r} i={i} width={widths[i]} small={small} match={isMatch(r, vendor)} />
+          </PathCard>
+        ))}
       </div>
     </div>
   )
 }
 
-function SlideCard({ r, i, x, left, cardW, gap, vw, small, match }: {
-  r: Review; i: number; x: MotionValue<number>; left: number; cardW: number; gap: number; vw: number; small: boolean; match: boolean
+function PathCard({ centre, travelled, path, children }: {
+  centre: number
+  travelled: MotionValue<number>
+  path: { radius: number; reach: number }
+  children: React.ReactNode
 }) {
-  // -1 at the left edge of the screen, 0 in the middle, 1 at the right edge
-  const pos = useTransform(x, v => Math.max(-1.5, Math.min(1.5, (left + v + cardW / 2 - vw / 2) / (vw / 2))))
-  const rotateY = useTransform(pos, p => p * -26)
-  const rotate = useTransform(pos, p => p * (small ? 3 : 5))
-  const scale = useTransform(pos, p => 1 - Math.min(Math.abs(p), 1.5) * 0.07)
+  const transform = useTransform(travelled, t => {
+    const x = centre - t // >0: still to come (right), <0: gone past (left)
+    const tilt = MAX_TILT * Math.tanh(Math.abs(x) / path.reach)
+    const rad = (tilt * Math.PI) / 180
+    const up = x < 0 ? -1 : 1
+    const y = up * path.radius * Math.sin(rad)
+    const z = -path.radius * (1 - Math.cos(rad))
+    return `translate(-50%, -50%) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateX(${(-up * tilt).toFixed(2)}deg)`
+  })
+  const zIndex = useTransform(travelled, t => 100 - Math.round(Math.abs(centre - t) / 50))
   return (
     <motion.div
-      style={{ rotateY, rotate, scale, transformPerspective: 1100, marginRight: gap }}
-      className="shrink-0 last:!mr-0"
+      style={{ transform, zIndex, transformStyle: 'preserve-3d', backfaceVisibility: 'hidden', willChange: 'transform' }}
+      className="absolute top-1/2 left-1/2"
     >
-      <CardBody r={r} i={i} width={cardW} match={match} />
+      {children}
     </motion.div>
   )
 }
 
-function CardBody({ r, i, width, match }: { r: Review; i: number; width: number; match: boolean }) {
+function CardBody({ r, i, width, small, match }: { r: Review; i: number; width: number; small: boolean; match: boolean }) {
   const look = LOOKS[i % LOOKS.length]
   const words = (
     <>
       {match && (
         <p className="mb-4 inline-block rounded-full bg-background px-3 py-1 text-xs font-semibold text-ink">From an owner in a similar position</p>
       )}
-      <p className={cn('text-base sm:text-lg', look.star)} aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
-      <blockquote className="display mt-5 text-[2.1rem] leading-[1.05] text-balance sm:text-5xl lg:text-6xl">“{r.pull}”</blockquote>
+      <p className={cn('text-sm', look.star)} aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
+      <blockquote className="display mt-4 text-[1.75rem] leading-[0.98] text-balance sm:text-[2rem]">“{r.pull}”</blockquote>
     </>
   )
   const caption = (
-    <figcaption className="mt-8 text-sm sm:text-base">
-      <span className="block text-base font-semibold sm:text-lg">{r.name}</span>
+    <figcaption className="mt-6 text-sm">
+      <span className="block font-semibold">{r.name}</span>
       <span className={look.sub}>{describe(r)}</span>
     </figcaption>
   )
+  const size = { width, height: small ? undefined : 460 }
 
   if (r.photo) {
+    const src = `${import.meta.env.BASE_URL}photos/reviews/${r.photo}`
     return (
-      <figure style={{ width }} className="overflow-hidden rounded-[30px] bg-card shadow-xl shadow-ink/10">
-        <img src={`${import.meta.env.BASE_URL}photos/reviews/${r.photo}`} alt={r.name} loading="lazy" className="h-[38dvh] w-full object-cover" />
-        <div className={cn('relative -mt-10 mx-3 mb-3 rounded-[24px] p-6 sm:p-10', look.card)}>
-          {words}
+      <figure style={size} className={cn('flex gap-4 overflow-hidden rounded-[48px] p-4', look.card, width > 600 ? 'flex-row' : 'flex-col')}>
+        <div className="flex flex-1 flex-col justify-between p-4">
+          <div>{words}</div>
           {caption}
         </div>
+        <img src={src} alt={r.name} loading="lazy" className={cn('rounded-[36px] object-cover', width > 600 ? 'h-full w-[44%]' : 'h-56 w-full')} />
       </figure>
     )
   }
 
   return (
-    <figure style={{ width }} className={cn('flex h-[calc(100dvh-140px)] max-h-[720px] min-h-[420px] flex-col justify-between rounded-[30px] p-7 shadow-xl shadow-ink/10 sm:rounded-[40px] sm:p-14', look.card)}>
+    <figure style={size} className={cn('flex min-h-[352px] flex-col justify-between rounded-[48px] p-8', look.card)}>
       <div>{words}</div>
       {caption}
     </figure>
