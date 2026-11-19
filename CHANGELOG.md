@@ -6,6 +6,11 @@ A running log of all changes made to the website.
 
 ## 2026-11-20
 
+### Review page — friendlier address
+- The Google review page moved from `/google-review.html` to `/thank-you` (file renamed to `thank-you.html`)
+- Old `/google-review.html` and `/google-review` links redirect to `/thank-you`, so links already sent keep working
+- Added a link preview: shared links now show "Thanks for working with Sakshi", "Could you please share how your experience was?" and a picture of Sakshi (`assets/share-thank-you.jpg`, 1200 × 630)
+
 ### Vendor page — sliding review cards
 - The reviews section is now a strip of review cards in different colours that slides from right to left as you scroll, with the cards tilting as they pass (inspired by wisprflow.ai)
 - Cards now follow the same curved 3D path, sizes and scroll speed as wisprflow.ai: they rise from the lower right, sit flat in the middle, then tip back and leave to the upper left (wide 740 × 460 and square 416 × 460 cards on desktop, full width on phones)
