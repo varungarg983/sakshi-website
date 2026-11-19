@@ -66,7 +66,6 @@ const LOOKS = [
   { card: 'bg-gold-soft text-ink', sub: 'text-ink/60', star: 'text-gold' },
   { card: 'bg-ink text-background', sub: 'text-background/60', star: 'text-accent' },
 ]
-const LIFT = [0, 70, -40, 50, -60, 20]
 
 function useViewportWidth() {
   const [vw, setVw] = useState(() => window.innerWidth)
@@ -83,13 +82,14 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
   const reduce = useReducedMotion()
   const vw = useViewportWidth()
   const small = vw < 640
-  const cardW = small ? Math.min(300, vw - 72) : 400
-  const gap = small ? 20 : 44
+  // Each card fills the screen when it reaches the middle
+  const cardW = small ? vw - 32 : Math.min(vw - 160, 1100)
+  const gap = small ? 24 : 80
   const step = cardW + gap
   const trackW = reviews.length * step - gap
   // The first card starts part-way in from the right; the strip ends with the last card in view
-  const startX = small ? vw * 0.4 : vw * 0.62
-  const endX = small ? (vw - cardW) / 2 - (trackW - cardW) : vw - trackW - 72
+  const startX = vw * 0.55
+  const endX = (vw - cardW) / 2 - (trackW - cardW)
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
   const x = useTransform(scrollYProgress, [0.03, 0.97], [startX, endX])
@@ -107,7 +107,7 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
   }
 
   return (
-    <div ref={ref} style={{ height: `${Math.round(reviews.length * (small ? 52 : 42) + 60)}vh` }} className="relative">
+    <div ref={ref} style={{ height: `${Math.round(reviews.length * 100 + 40)}vh` }} className="relative">
       <div className="sticky top-0 flex h-dvh items-center overflow-hidden">
         <motion.div style={{ x, width: trackW }} className="relative flex shrink-0 items-center" aria-label="Reviews">
           {reviews.map((r, i) => (
@@ -127,10 +127,9 @@ function SlideCard({ r, i, x, left, cardW, gap, vw, small, match }: {
   const rotateY = useTransform(pos, p => p * -26)
   const rotate = useTransform(pos, p => p * (small ? 3 : 5))
   const scale = useTransform(pos, p => 1 - Math.min(Math.abs(p), 1.5) * 0.07)
-  const lift = LIFT[i % LIFT.length] * (small ? 0.4 : 1)
   return (
     <motion.div
-      style={{ rotateY, rotate, scale, y: lift, transformPerspective: 1100, marginRight: gap }}
+      style={{ rotateY, rotate, scale, transformPerspective: 1100, marginRight: gap }}
       className="shrink-0 last:!mr-0"
     >
       <CardBody r={r} i={i} width={cardW} match={match} />
@@ -145,13 +144,13 @@ function CardBody({ r, i, width, match }: { r: Review; i: number; width: number;
       {match && (
         <p className="mb-4 inline-block rounded-full bg-background px-3 py-1 text-xs font-semibold text-ink">From an owner in a similar position</p>
       )}
-      <p className={cn('text-sm', look.star)} aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
-      <blockquote className="display mt-3 text-[1.55rem] leading-[1.08] text-balance sm:text-[1.95rem]">“{r.pull}”</blockquote>
+      <p className={cn('text-base sm:text-lg', look.star)} aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
+      <blockquote className="display mt-5 text-[2.1rem] leading-[1.05] text-balance sm:text-5xl lg:text-6xl">“{r.pull}”</blockquote>
     </>
   )
   const caption = (
-    <figcaption className="mt-6 text-sm">
-      <span className="block font-semibold">{r.name}</span>
+    <figcaption className="mt-8 text-sm sm:text-base">
+      <span className="block text-base font-semibold sm:text-lg">{r.name}</span>
       <span className={look.sub}>{describe(r)}</span>
     </figcaption>
   )
@@ -159,8 +158,8 @@ function CardBody({ r, i, width, match }: { r: Review; i: number; width: number;
   if (r.photo) {
     return (
       <figure style={{ width }} className="overflow-hidden rounded-[30px] bg-card shadow-xl shadow-ink/10">
-        <img src={`${import.meta.env.BASE_URL}photos/reviews/${r.photo}`} alt={r.name} loading="lazy" className="h-60 w-full object-cover sm:h-72" />
-        <div className={cn('relative -mt-10 mx-3 mb-3 rounded-[24px] p-6', look.card)}>
+        <img src={`${import.meta.env.BASE_URL}photos/reviews/${r.photo}`} alt={r.name} loading="lazy" className="h-[38dvh] w-full object-cover" />
+        <div className={cn('relative -mt-10 mx-3 mb-3 rounded-[24px] p-6 sm:p-10', look.card)}>
           {words}
           {caption}
         </div>
@@ -169,7 +168,7 @@ function CardBody({ r, i, width, match }: { r: Review; i: number; width: number;
   }
 
   return (
-    <figure style={{ width }} className={cn('flex min-h-[380px] flex-col justify-between rounded-[30px] p-7 shadow-xl shadow-ink/10 sm:min-h-[440px] sm:p-9', look.card)}>
+    <figure style={{ width }} className={cn('flex h-[calc(100dvh-140px)] max-h-[720px] min-h-[420px] flex-col justify-between rounded-[30px] p-7 shadow-xl shadow-ink/10 sm:rounded-[40px] sm:p-14', look.card)}>
       <div>{words}</div>
       {caption}
     </figure>
