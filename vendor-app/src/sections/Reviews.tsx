@@ -7,6 +7,7 @@ import { REVIEWS, type Review } from '@/data/reviews'
 import type { Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
+const SLIDE = 5
 const PAGE = 4
 
 // Reviews from owners in the same industry or situation come first
@@ -51,7 +52,7 @@ export function Reviews({ vendor }: { vendor: Vendor | null }) {
         </Reveal>
       </div>
 
-      {sorted.length > 0 && <ReviewSlide reviews={sorted} vendor={vendor} />}
+      {sorted.length > 0 && <ReviewSlide reviews={sorted.slice(0, SLIDE)} vendor={vendor} />}
       <AllReviews reviews={sorted} />
     </section>
   )
