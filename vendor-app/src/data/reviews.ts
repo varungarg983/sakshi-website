@@ -6,6 +6,7 @@
 // situation: optional, one of the keys in SITUATIONS (content.ts), e.g. 'retiring'
 // name:      as shown on Google, shortened to first name and last initial
 // pull:      one sentence copied from the review, shown large
+// photo:     optional photo of the reviewer (only with their permission), a file in public/photos/reviews/, e.g. 'sunny.webp'
 
 import type { Industry, Situation } from './content'
 
@@ -18,6 +19,7 @@ export type Review = {
   situation?: Situation
   rating: number
   text: string
+  photo?: string
 }
 
 export const REVIEWS: Review[] = [

@@ -4,6 +4,14 @@ A running log of all changes made to the website.
 
 ---
 
+## 2026-11-20
+
+### Vendor page — sliding review cards
+- The reviews section is now a strip of review cards in different colours that slides from right to left as you scroll, with the cards tilting as they pass (inspired by wisprflow.ai)
+- Shows all 11 reviews instead of 5; reviews from owners in a similar position still come first
+- Reviews can now have an optional photo (`photo` in `reviews.ts`, file in `vendor-app/public/photos/reviews/`); photo cards show the picture with the quote over it
+- People who turn off motion on their device get a simple sideways-scrolling row instead
+
 ## 2026-11-18
 
 ### Link maker — voice notes, AI drafting and recent links

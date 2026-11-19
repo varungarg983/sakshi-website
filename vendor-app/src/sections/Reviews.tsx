@@ -1,13 +1,12 @@
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
 import { ArrowUpRight } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Label, Reveal, btn } from '@/components/common'
 import { CONTACT, INDUSTRIES, SITUATIONS, type Industry } from '@/data/content'
 import { REVIEWS, type Review } from '@/data/reviews'
 import type { Vendor } from '@/lib/vendor'
 import { cn } from '@/lib/utils'
 
-const STORY = 5
 const PAGE = 4
 
 // Reviews from owners in the same industry or situation come first
@@ -40,7 +39,6 @@ export function Reviews({ vendor }: { vendor: Vendor | null }) {
     () => REVIEWS.map((r, i) => ({ r, i })).sort((a, b) => score(b.r, vendor) - score(a.r, vendor) || a.i - b.i).map(x => x.r),
     [vendor],
   )
-  const story = sorted.slice(0, STORY)
 
   return (
     <section id="reviews" className="scroll-mt-20">
@@ -53,86 +51,127 @@ export function Reviews({ vendor }: { vendor: Vendor | null }) {
         </Reveal>
       </div>
 
-      {story.length > 0 && <ReviewStory story={story} vendor={vendor} />}
+      {sorted.length > 0 && <ReviewSlide reviews={sorted} vendor={vendor} />}
       <AllReviews reviews={sorted} />
     </section>
   )
 }
 
-// The section pins in place while you scroll, and the quote changes with each step
-function ReviewStory({ story, vendor }: { story: Review[]; vendor: Vendor | null }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [active, setActive] = useState(0)
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  useMotionValueEvent(scrollYProgress, 'change', p => setActive(Math.min(story.length - 1, Math.max(0, Math.floor(p * story.length)))))
+// Cards in different colours slide in from the right as you scroll, tilting as they pass
+const LOOKS = [
+  { card: 'bg-navy text-white', sub: 'text-white/60', star: 'text-accent' },
+  { card: 'bg-accent text-ink', sub: 'text-ink/60', star: 'text-gold' },
+  { card: 'bg-card text-ink ring-1 ring-ink/10', sub: 'text-muted-foreground', star: 'text-gold' },
+  { card: 'bg-gold-soft text-ink', sub: 'text-ink/60', star: 'text-gold' },
+  { card: 'bg-ink text-background', sub: 'text-background/60', star: 'text-accent' },
+]
+const LIFT = [0, 70, -40, 50, -60, 20]
 
-  const jump = (i: number) => {
-    const el = ref.current
-    if (!el) return
-    const top = el.getBoundingClientRect().top + window.scrollY
-    const span = el.offsetHeight - window.innerHeight
-    window.scrollTo({ top: top + (span * (i + 0.5)) / story.length, behavior: 'smooth' })
+function useViewportWidth() {
+  const [vw, setVw] = useState(() => window.innerWidth)
+  useEffect(() => {
+    const on = () => setVw(window.innerWidth)
+    window.addEventListener('resize', on)
+    return () => window.removeEventListener('resize', on)
+  }, [])
+  return vw
+}
+
+function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | null }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const reduce = useReducedMotion()
+  const vw = useViewportWidth()
+  const small = vw < 640
+  const cardW = small ? Math.min(300, vw - 72) : 400
+  const gap = small ? 20 : 44
+  const step = cardW + gap
+  const trackW = reviews.length * step - gap
+  // The first card starts part-way in from the right; the strip ends with the last card in view
+  const startX = small ? vw * 0.4 : vw * 0.62
+  const endX = small ? (vw - cardW) / 2 - (trackW - cardW) : vw - trackW - 72
+
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const x = useTransform(scrollYProgress, [0.03, 0.97], [startX, endX])
+
+  if (reduce) {
+    return (
+      <div className="flex snap-x gap-5 overflow-x-auto px-4 py-16">
+        {reviews.map((r, i) => (
+          <div key={r.name} className="snap-start">
+            <CardBody r={r} i={i} width={cardW} match={isMatch(r, vendor)} />
+          </div>
+        ))}
+      </div>
+    )
   }
 
-  const r = story[active]
   return (
-    <div ref={ref} style={{ height: `${story.length * 75 + 25}vh` }} className="relative">
-      <div className="sticky top-0 flex h-dvh items-center">
-        <div className="mx-auto grid w-full max-w-5xl gap-6 px-4 md:grid-cols-[220px_1fr] md:gap-12">
-          <ol className="hidden flex-col justify-center gap-1 md:flex">
-            {story.map((s, i) => (
-              <li key={s.name}>
-                <button
-                  onClick={() => jump(i)}
-                  className={cn(
-                    'w-full border-l-2 py-2 pl-4 text-left font-heading text-xl transition-colors',
-                    i === active ? 'border-ink text-ink' : 'border-border text-muted-foreground hover:text-ink',
-                  )}
-                >
-                  {s.name}
-                </button>
-              </li>
-            ))}
-          </ol>
-
-          <div className="relative flex min-h-[460px] flex-col overflow-hidden rounded-[28px] bg-navy p-7 text-white sm:min-h-[520px] sm:p-12">
-            <div className="flex gap-1.5 md:hidden">
-              {story.map((_, i) => (
-                <button key={i} onClick={() => jump(i)} aria-label="Show this review" className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
-                  <span className={cn('block h-full bg-accent transition-all duration-500', i <= active ? 'w-full' : 'w-0')} />
-                </button>
-              ))}
-            </div>
-            <AnimatePresence mode="wait">
-              <motion.figure
-                key={active}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-1 flex-col justify-between pt-8 md:pt-0"
-              >
-                <div>
-                  {isMatch(r, vendor) && (
-                    <p className="mb-6 inline-block rounded-full bg-accent px-3 py-1 text-xs font-semibold text-ink">
-                      From an owner in a similar position
-                    </p>
-                  )}
-                  <p className="text-accent" aria-label="5 out of 5 stars">{'★'.repeat(r.rating)}</p>
-                  <blockquote className="display mt-5 text-[2.1rem] leading-[1.05] text-balance sm:text-5xl">“{r.pull}”</blockquote>
-                </div>
-                <figcaption className="mt-8 flex items-end justify-between gap-4 text-sm">
-                  <span>
-                    <span className="block text-base font-semibold">{r.name}</span>
-                    <span className="text-white/60">{describe(r)}</span>
-                  </span>
-                </figcaption>
-              </motion.figure>
-            </AnimatePresence>
-          </div>
-        </div>
+    <div ref={ref} style={{ height: `${Math.round(reviews.length * (small ? 52 : 42) + 60)}vh` }} className="relative">
+      <div className="sticky top-0 flex h-dvh items-center overflow-hidden">
+        <motion.div style={{ x, width: trackW }} className="relative flex shrink-0 items-center" aria-label="Reviews">
+          {reviews.map((r, i) => (
+            <SlideCard key={r.name} r={r} i={i} x={x} left={i * step} cardW={cardW} gap={gap} vw={vw} small={small} match={isMatch(r, vendor)} />
+          ))}
+        </motion.div>
       </div>
     </div>
+  )
+}
+
+function SlideCard({ r, i, x, left, cardW, gap, vw, small, match }: {
+  r: Review; i: number; x: MotionValue<number>; left: number; cardW: number; gap: number; vw: number; small: boolean; match: boolean
+}) {
+  // -1 at the left edge of the screen, 0 in the middle, 1 at the right edge
+  const pos = useTransform(x, v => Math.max(-1.5, Math.min(1.5, (left + v + cardW / 2 - vw / 2) / (vw / 2))))
+  const rotateY = useTransform(pos, p => p * -26)
+  const rotate = useTransform(pos, p => p * (small ? 3 : 5))
+  const scale = useTransform(pos, p => 1 - Math.min(Math.abs(p), 1.5) * 0.07)
+  const lift = LIFT[i % LIFT.length] * (small ? 0.4 : 1)
+  return (
+    <motion.div
+      style={{ rotateY, rotate, scale, y: lift, transformPerspective: 1100, marginRight: gap }}
+      className="shrink-0 last:!mr-0"
+    >
+      <CardBody r={r} i={i} width={cardW} match={match} />
+    </motion.div>
+  )
+}
+
+function CardBody({ r, i, width, match }: { r: Review; i: number; width: number; match: boolean }) {
+  const look = LOOKS[i % LOOKS.length]
+  const words = (
+    <>
+      {match && (
+        <p className="mb-4 inline-block rounded-full bg-background px-3 py-1 text-xs font-semibold text-ink">From an owner in a similar position</p>
+      )}
+      <p className={cn('text-sm', look.star)} aria-label={`${r.rating} out of 5 stars`}>{'★'.repeat(r.rating)}</p>
+      <blockquote className="display mt-3 text-[1.55rem] leading-[1.08] text-balance sm:text-[1.95rem]">“{r.pull}”</blockquote>
+    </>
+  )
+  const caption = (
+    <figcaption className="mt-6 text-sm">
+      <span className="block font-semibold">{r.name}</span>
+      <span className={look.sub}>{describe(r)}</span>
+    </figcaption>
+  )
+
+  if (r.photo) {
+    return (
+      <figure style={{ width }} className="overflow-hidden rounded-[30px] bg-card shadow-xl shadow-ink/10">
+        <img src={`${import.meta.env.BASE_URL}photos/reviews/${r.photo}`} alt={r.name} loading="lazy" className="h-60 w-full object-cover sm:h-72" />
+        <div className={cn('relative -mt-10 mx-3 mb-3 rounded-[24px] p-6', look.card)}>
+          {words}
+          {caption}
+        </div>
+      </figure>
+    )
+  }
+
+  return (
+    <figure style={{ width }} className={cn('flex min-h-[380px] flex-col justify-between rounded-[30px] p-7 shadow-xl shadow-ink/10 sm:min-h-[440px] sm:p-9', look.card)}>
+      <div>{words}</div>
+      {caption}
+    </figure>
   )
 }
 
