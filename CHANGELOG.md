@@ -17,6 +17,13 @@ A running log of all changes made to the website.
 - Shows the 5 strongest reviews; reviews from owners in a similar position come first. All reviews are still in full below
 - Reviews can now have an optional photo (`photo` in `reviews.ts`, file in `vendor-app/public/photos/reviews/`); photo cards show the picture with the quote over it
 - People who turn off motion on their device get a simple sideways-scrolling row instead
+- The strip now ends with an "And many more" card, so visitors know these are only some of the owners Sakshi has helped, with buttons to read every review or see them on Google
+
+### About, home and vendor pages — more on Sakshi's background
+- Added details from her Clyth McLeod profile: Bachelor of Business (Accounting) from AUT, car sales and retail food sales experience, more than 170,000 followers across her digital channels, and fluent English, Hindi and Punjabi
+- About page: rewrote the Background and How she works sections and the three cards (Financial understanding, Customer-focused experience, Digital marketing reach)
+- Home page: added a "170,000+ followers" highlight
+- Vendor page: added the follower count to the highlights, journey and credentials, and food retail to the first journey step
 
 ## 2026-11-18
 

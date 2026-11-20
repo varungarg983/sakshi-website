@@ -40,6 +40,7 @@ export function Hero({ vendor }: { vendor: Vendor | null }) {
 
   const proof = [
     'Businesses sold before listing',
+    '170,000+ followers see my listings',
     allFive ? 'Five-star Google reviews' : 'Real Google reviews',
     `Speaks ${LANGUAGES.join(', ')}`,
     'Accounting degree, AUT',

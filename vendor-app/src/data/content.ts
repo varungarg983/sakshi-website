@@ -74,8 +74,8 @@ export const JOURNEY: { year?: string; title: string; text: string }[] = [
     text: 'A Bachelor of Business in Accounting. It’s why I can read your financials the way a buyer’s accountant will.',
   },
   {
-    title: 'Started out selling cars',
-    text: 'Where I learnt to read people, handle tough negotiations and earn trust quickly.',
+    title: 'Started out in car sales and food retail',
+    text: 'Where I learnt to read people, handle tough negotiations and earn trust quickly, and saw how different businesses really run day to day.',
   },
   {
     title: 'Moved into selling houses',
@@ -87,7 +87,7 @@ export const JOURNEY: { year?: string; title: string; text: string }[] = [
   },
   {
     title: 'Building a pool of ready buyers',
-    text: 'I’ve made more than 1,500 videos about buying and selling businesses. Buyers come to me, so I often have one in mind before a business is listed.',
+    text: 'I’ve made more than 1,500 videos about buying and selling businesses, followed by more than 170,000 people. Buyers come to me, so I often have one in mind before a business is listed.',
   },
 ]
 

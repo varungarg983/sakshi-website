@@ -88,7 +88,9 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
   const small = vw < 640
 
   // Sizes taken from Wispr: 416 × 460 and 740 × 460 on desktop, screen width less 52px on phones
-  const widths = reviews.map((_, i) => (small ? vw - 52 : WIDE[i % WIDE.length] ? Math.min(740, vw - 48) : 416))
+  // The last card is the "and many more" card, so no one thinks these are the only businesses
+  const widths = [...reviews.map((_, i) => (small ? vw - 52 : WIDE[i % WIDE.length] ? Math.min(740, vw - 48) : 416)), small ? vw - 52 : 416]
+  const last = widths.length - 1
   const gap = small ? 108 : 140
   const centres: number[] = []
   widths.forEach((w, i) => centres.push(i === 0 ? 0 : centres[i - 1] + widths[i - 1] / 2 + gap + w / 2))
@@ -106,6 +108,9 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
             <CardBody r={r} i={i} width={widths[i]} small={small} match={isMatch(r, vendor)} />
           </div>
         ))}
+        <div className="snap-start">
+          <MoreCard width={widths[last]} small={small} />
+        </div>
       </div>
     )
   }
@@ -119,6 +124,9 @@ function ReviewSlide({ reviews, vendor }: { reviews: Review[]; vendor: Vendor | 
             <CardBody r={r} i={i} width={widths[i]} small={small} match={isMatch(r, vendor)} />
           </PathCard>
         ))}
+        <PathCard centre={centres[last]} travelled={travelled} path={path}>
+          <MoreCard width={widths[last]} small={small} />
+        </PathCard>
       </div>
     </div>
   )
@@ -190,6 +198,31 @@ function CardBody({ r, i, width, small, match }: { r: Review; i: number; width: 
   )
 }
 
+function MoreCard({ width, small }: { width: number; small: boolean }) {
+  return (
+    <div
+      style={{ width, height: small ? undefined : 460 }}
+      className="flex min-h-[352px] flex-col justify-between rounded-[48px] bg-accent p-8 text-ink"
+    >
+      <div>
+        <p className="text-sm text-gold" aria-hidden="true">★★★★★</p>
+        <h3 className="display mt-4 text-[2.5rem] leading-[0.95] sm:text-[3rem]">
+          And <em>many</em> more.
+        </h3>
+        <p className="mt-4 text-[1.05rem] leading-relaxed text-ink/75">
+          These are just a few of the owners I’ve helped buy and sell businesses. There are plenty more on Google.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <a href="#all-reviews" className={cn(btn.base, btn.ghost, 'bg-background')}>Read every review</a>
+        <a href={CONTACT.googleReviews} target="_blank" rel="noopener noreferrer" className={cn(btn.base, btn.ghost)}>
+          On Google <ArrowUpRight />
+        </a>
+      </div>
+    </div>
+  )
+}
+
 function AllReviews({ reviews }: { reviews: Review[] }) {
   const [shown, setShown] = useState(PAGE)
   const googleLink = (
@@ -198,7 +231,7 @@ function AllReviews({ reviews }: { reviews: Review[] }) {
     </a>
   )
   return (
-    <div className="mx-auto max-w-5xl px-4 pt-16 pb-8">
+    <div id="all-reviews" className="mx-auto max-w-5xl scroll-mt-20 px-4 pt-16 pb-8">
       <Reveal className="flex flex-col items-start justify-between gap-4 border-t border-ink/15 pt-8 sm:flex-row sm:items-end">
         <h3 className="display text-4xl">Every review, <em>in full.</em></h3>
         {googleLink}

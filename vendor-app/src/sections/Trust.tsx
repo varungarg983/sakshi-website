@@ -115,6 +115,8 @@ export function Credentials() {
   const facts = [
     'Licensed Salesperson under the Real Estate Agents Act 2008',
     'Bachelor of Business in Accounting, AUT',
+    'Background in car sales and retail food sales',
+    'More than 170,000 followers across my digital channels',
     `Speaks ${LANGUAGES.join(', ')}`,
   ]
   return (
